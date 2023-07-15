@@ -22,4 +22,3 @@ client.on("messageCreate", async (message) => {
     //await checkMessageAndVx(message);
 });
 
-
