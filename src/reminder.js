@@ -19,7 +19,7 @@ function handleReminder(message) {
         message.reply(`Okay, I\'ll remind you to "${reminder}" in ${parts[1]}`);
 
         setTimeout(() => {
-            message.reply('Reminder: ${reminder}');
+            message.reply(`Reminder: ${reminder}`);
         }, ms(parts[1]));
     }
 }
