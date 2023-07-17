@@ -16,7 +16,7 @@ function handleReminder(message) {
 
         const reminder = parts.slice(2).join(' ');
 
-        message.reply(`Okay, I\'ll remind you to "${reminder}" in ${parts[1]}`);
+        message.reply(`Okay, I\'ll remind you with: "${reminder}" in ${parts[1]}.`);
 
         setTimeout(() => {
             message.reply(`Reminder: ${reminder}`);
