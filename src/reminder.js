@@ -4,7 +4,7 @@ function handleReminder(message) {
     if (message.content.startsWith('!remindme')) {
         const parts = message.content.split(' ');
 
-        if (!parts[1] || isNaN(ms(parta[1]))) {
+        if (!parts[1] || isNaN(ms(parts[1]))) {
             message.channel.send('Not a valid time format...idiot. Remember, the syntax is !remindme (time) (reminder)');
             return;
         }
