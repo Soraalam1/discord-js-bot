@@ -24,4 +24,4 @@ function handleReminder(message) {
     }
 }
 
-module.exports = handleReminder;
+module.exports = {handleReminder};
