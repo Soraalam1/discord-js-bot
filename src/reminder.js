@@ -16,10 +16,10 @@ function handleReminder(message) {
 
         const reminder = parts.slice(2).join(' ');
 
-        message.channel.send('Okay, I\'ll remind you to "${reminder}" in ${parts[1]}');
+        message.reply(`Okay, I\'ll remind you to "${reminder}" in ${parts[1]}`);
 
         setTimeout(() => {
-            message.author.send('Reminder: ${reminder}');
+            message.reply('Reminder: ${reminder}');
         }, ms(parts[1]));
     }
 }
