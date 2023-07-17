@@ -1,6 +1,7 @@
 const {Client: DiscordClient, IntentsBitField} = require('discord.js');
 require('dotenv').config();
 const {checkMessageAndVx} = require("./vx-util");
+const {handleReminder} = require("./reminder");
 
 const client = new DiscordClient({
     intents: [
@@ -20,5 +21,6 @@ client.on("ready", (client) => {
 client.on("messageCreate", async (message) => {
     // TODO: Twitter API is paywalled, need a workaround for checking for videos
     //await checkMessageAndVx(message);
+    handleReminder(message);
 });
 
