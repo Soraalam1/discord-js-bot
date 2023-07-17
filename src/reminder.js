@@ -14,7 +14,7 @@ function handleReminder(message) {
             return;
         }
 
-        const reminder = parts.slice(2).join(' ')
+        const reminder = parts.slice(2).join(' ');
 
         message.channel.send('Okay, I\'ll remind you to "${reminder}" in ${parts[1]}');
 
