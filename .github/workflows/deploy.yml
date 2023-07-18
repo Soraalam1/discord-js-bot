@@ -1,0 +1,18 @@
+name: Simple Deploy
+
+on:
+  push:
+    branches: [ master ]
+    
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: aws
+    steps:
+    - name: Executing remote commands to deploy
+      uses: appleboy/ssh-action@v0.1.10
+      with: 
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        script: cd discord-js-bot/ && pm2 stop Tsureimu && git pull origin master && npm install && pm2 start Tsureimu && exit
