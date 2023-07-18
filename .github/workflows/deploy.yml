@@ -28,7 +28,7 @@ jobs:
         script: >-
           cd discord-js-bot/ && 
           curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - &&
-          sudo apt-get install -y nodejs &&
+          sudo apt-get -o Dpkg::Options::="--force-overwrite" install -y nodejs &&
           node -v &&
           sudo npm install -g pm2 && 
           pm2 stop Tsureimu && 
