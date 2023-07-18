@@ -11,14 +11,14 @@ jobs:
     steps:
     - name: Prepare Environment
       uses: appleboy/ssh-action@v0.1.10
-      with: 
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.SSH_KEY }}
-        script: >- 
-          sudo apt install curl && 
-          curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash  && 
-          exit
+#      with:
+#        host: ${{ secrets.HOST }}
+#        username: ${{ secrets.USERNAME }}
+#        key: ${{ secrets.SSH_KEY }}
+#        script: >-
+#          sudo apt install curl &&
+#          curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash  &&
+#          exit
     - name: Launch bot
       uses: appleboy/ssh-action@v0.1.10
       with:
@@ -26,9 +26,10 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSH_KEY }}
         script: >-
-          source ~/.bashrc &&
           cd discord-js-bot/ && 
-          sudo nvm install 18.14.2 &&
+          curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - &&
+          sudo apt-get install -y nodejs &&
+          node -v &&
           sudo npm install -g pm2 && 
           pm2 stop Tsureimu && 
           git pull origin master &&
