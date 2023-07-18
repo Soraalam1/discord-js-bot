@@ -9,9 +9,19 @@ jobs:
     runs-on: ubuntu-latest
     environment: aws
     steps:
-    - name: Executing remote commands to deploy
+    - name: Prepare Environment
       uses: appleboy/ssh-action@v0.1.10
       with: 
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        script: >- 
+          sudo apt install curl && 
+          curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash  && 
+          exit
+    - name: Launch bot
+      uses: appleboy/ssh-action@v0.1.10
+      with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSH_KEY }}
