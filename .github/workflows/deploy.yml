@@ -26,8 +26,8 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSH_KEY }}
         script: >-
-          cd discord-js-bot/ && 
           source ~/.bashrc &&
+          cd discord-js-bot/ && 
           nvm install 18.14.2 &&
           sudo npm install -g pm2 && 
           pm2 stop Tsureimu && 
