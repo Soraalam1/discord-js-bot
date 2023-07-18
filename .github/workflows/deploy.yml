@@ -15,4 +15,15 @@ jobs:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSH_KEY }}
-        script: cd discord-js-bot/ && sudo npm install -g pm2 && pm2 stop Tsureimu && git pull origin master && npm install && pm2 start Tsureimu && exit
+        script: >-
+          cd discord-js-bot/ && 
+          sudo apt install curl && 
+          curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash  && 
+          source ~/.bashrc &&
+          nvm install 18.14.2 &&
+          sudo npm install -g pm2 && 
+          pm2 stop Tsureimu && 
+          git pull origin master &&
+          npm install &&
+          pm2 start Tsureimu && 
+          exit
