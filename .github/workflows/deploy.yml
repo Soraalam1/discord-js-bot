@@ -9,8 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: aws
     steps:
-    - name: Prepare Environment
-      uses: appleboy/ssh-action@v0.1.10
+#    - name: Prepare Environment
+#      uses: appleboy/ssh-action@v0.1.10
 #      with:
 #        host: ${{ secrets.HOST }}
 #        username: ${{ secrets.USERNAME }}
