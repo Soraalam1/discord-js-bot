@@ -22,68 +22,77 @@ function handleReminder(message) {
 
         const parts = message.content.split(' ');
 
+        let timeZoneFull = moment.tz.guess(); // Sets default timezone to system timezone
+
         if (!parts[1]) {
-            message.channel.send('Sorry, it looks like you used the command wrong. Remember, the syntax is !remindme (time) (timezone) (reminder)');
+            message.channel.send('Sorry, it looks like you used the command wrong. Remember, the syntax is !remindme (time/duration) (timezone optional) (reminder)');
             console.log(`User ${message.author.username} submitted an invalid reminder request.`);
             return;
         }
 
-        let delay;
+        let timeOrDuration = parts[1];
         let reminder;
-        const timeOrDuration = parts[1];
 
-        // If the second argument is a recognized timezone, interpret the first argument as a time
-        const timeZoneFull = moment.tz.zone(parts[2]) ? parts[2] : timezoneMapping[parts[2].toUpperCase()];
-        if (timeZoneFull) {
-            const time = timeOrDuration;
-            reminder = parts.slice(3).join(' ');
+        // Check if timeOrDuration is a duration (like "5 hours") or a time (like "10:00 PM")
+        const duration = ms(timeOrDuration);
+        if (!isNaN(duration)) {
+            // It's a duration, so we'll treat it as such
+            reminder = parts.slice(2).join(' ');
 
-            // Creates a moment object in specified time zone
-            console.log(`Time input: ${time}`);
-            console.log(`Timezone input: ${timeZoneFull}`);
+            message.reply(`Okay, I'll remind you with: "${reminder}" in ${timeOrDuration}.`);
 
-            const targetMoment = moment.tz(timeZoneFull);
-            targetMoment.set({
-                hour:   moment(time, 'h:mm A').get('hour'),
-                minute: moment(time, 'h:mm A').get('minute')
-            });
-            const currentTime = moment.tz(timeZoneFull);
-            delay = targetMoment.diff(currentTime);
+            setTimeout(() => {
+                const d = new Date();
+                const time = d.toLocaleTimeString();
+                message.reply(`Reminder: ${reminder}`);
+                console.log(`Reminder for ${message.author.username} fulfilled at ${time}`);
+            }, duration);
+        } else {
+            // It's a time, so we'll treat it as such
+            let reminderStartIndex = 3; // Assumes timezone is provided
+            if (!parts[2] || isNaN(ms(parts[2]))) {
+                const tz = parts[2].toUpperCase();
+                if (moment.tz.zone(tz) || timezoneMapping[tz]) {
+                    timeZoneFull = timezoneMapping[tz] || tz;
+                    timeZoneDisplay = tz; // Displays user input as entered
+                } else {
+                    timeZoneFull = moment.tz.guess(); // Uses system time zone if not specified or invalid
+                    timeZoneDisplay = moment.tz(timeZoneFull).format('z'); // Uses abbreviated timezone for display
+                    reminderStartIndex = 2; // No timezone, so reminder starts from 2nd part
+                    console.log("User did not specify a timezone or it was invalid. Default system timezone will be used.");
+                }
+            }
+
+            const reminder = parts.slice(reminderStartIndex).join(' ');
+
+            const targetMoment = moment.tz(timeOrDuration, 'h:mm A', timeZoneFull);
+            const currentTime = moment().tz(timeZoneFull);
+
+            const timeDifferenceInMs = targetMoment.diff(currentTime);
+
+            if (timeDifferenceInMs < 0) {
+                message.reply(`You've set a reminder for a time that's already passed. You specified ${timeOrDuration}, but current time in ${timeZoneFull} is ${currentTime.format('h:mm A')}`);
+                console.log("Invalid reminder: Time specified is in the past.")
+                return;
+            }
 
             console.log(`Target moment: ${targetMoment.format()}`);
             console.log(`Current time: ${currentTime.format()}`);
-            console.log(`Delay: ${delay}`);
 
-            if (delay <= 0) {
-                // Interprets time as being for next day
-                targetMoment.add(1, 'day');
-                delay = targetMoment.diff(currentTime);
-                message.reply(`Okay, I\'ll remind you with: "${reminder}" at ${time} ${timeZoneFull} tomorrow. `);
+            if (reminderStartIndex == 2) {
+                message.reply(`You did not specify a time zone. I'll remind you with: "${reminder}" at ${timeOrDuration} ${timeZoneDisplay}. If you would like to use your own timezone, please specify next time: !remindme (time/duration) (timezone) (reminder)`);
             } else {
-                message.reply(`Okay, I\'ll remind you with: "${reminder}" at ${time} ${timeZoneFull}`);
+                message.reply(`Okay, I'll remind you with: "${reminder}" at ${timeOrDuration} ${timeZoneDisplay}.`);
             }
-        }
-        // Otherwise, interpret first argument as countdown
-        else if (!isNaN(ms(timeOrDuration))) {
-            reminder = parts.slice(2).join(' ');
-            delay = ms(timeOrDuration);
 
-            message.reply(`Okay, I\'ll remind you with: "${reminder}" in ${timeOrDuration}`);
+            setTimeout(() => {
+                console.log('Reminder fired')
+                const d = new Date();
+                const reminderTime = d.toLocaleTimeString();
+                message.reply(`Reminder: ${reminder}`);
+                console.log(`Reminder for ${message.author.username} fulfilled at ${reminderTime}`);
+            }, timeDifferenceInMs);
         }
-        else {
-            message.reply("Invalid time, duration or timezone, buddy. Try that again: !remindme (time or duration) (timezone if time provided) (reminder)");
-            console.log(`Invalid time, duration, or timezone used in request for user ${message.author.username}`);
-            return;
-        }
-
-        console.log('Setting reminder for ', delay, ' ms');
-        setTimeout(() => {
-            console.log('Reminder fired')
-            const d = new Date();
-            const reminderTime = d.toLocaleTimeString();
-            message.reply(`Reminder: ${reminder}`);
-            console.log(`Reminder for ${message.author.username} fulfilled at ${reminderTime}`);
-        }, delay);
     }
 }
 
