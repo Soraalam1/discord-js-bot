@@ -65,7 +65,7 @@ function handleReminder(message) {
                     timeZoneFull = moment.tz.guess(); // Uses system time zone if not specified or invalid
                     timeZoneDisplay = now.isDST() ? 'EDT' : 'EST';
                     reminderStartIndex = 2; // No timezone, so reminder starts from 2nd part
-                    console.log("User did not specify a timezone or it was invalid. Default system timezone will be used.");
+                    console.log("User did not specify a timezone or it was invalid. Default timezone will be used.");
                 }
             }
 
