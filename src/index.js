@@ -2,6 +2,9 @@ const {Client: DiscordClient, IntentsBitField} = require('discord.js');
 require('dotenv').config();
 const {checkMessageAndVx} = require("./vx-util");
 const {handleReminder} = require("./reminder");
+const {handleWordRace} = require("./wordrace");
+const { registerCommands } = require('./register-commands');
+
 
 const client = new DiscordClient({
     intents: [
@@ -14,8 +17,15 @@ const client = new DiscordClient({
 
 client.login(`${process.env.BOT_TOKEN}`);
 
-client.on("ready", (client) => {
+client.on("ready", async (client) => {
+    await registerCommands();
     console.log(`${client.user.username} is ready!`);
+});
+
+client.on('interactionCreate',(interaction) =>{
+    if(!interaction.isChatInputCommand()) return
+    console.log(interaction);
+    handleWordRace(interaction);
 });
 
 client.on("messageCreate", async (message) => {
