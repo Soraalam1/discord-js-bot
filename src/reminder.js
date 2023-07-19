@@ -72,7 +72,7 @@ function handleReminder(message) {
 
             if (timeDifferenceInMs < 0) {
                 message.reply(`You've set a reminder for a time that's already passed. You specified ${timeOrDuration}, but current time in ${timeZoneFull} is ${currentTime.format('h:mm A')}`);
-                console.log("Invalid reminder: Time specified is in the past.")
+                console.log("Invalid reminder: Time specified is in the past.");
                 return;
             }
 
