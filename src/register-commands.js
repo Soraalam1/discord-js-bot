@@ -10,7 +10,7 @@ const commands = [
 
 const rest = new REST({version:'10'}).setToken(process.env.BOT_TOKEN);
 
-(async () => {
+const registerCommands = async () => {
     try {
         console.log('Registering slash comands...');
 
@@ -22,4 +22,6 @@ const rest = new REST({version:'10'}).setToken(process.env.BOT_TOKEN);
     } catch (error) {
         console.log(`There was an error: ${error}`);
     }
-})();
+};
+
+module.exports = { registerCommands };
