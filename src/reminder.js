@@ -50,14 +50,20 @@ function handleReminder(message) {
         } else {
             // It's a time, so we'll treat it as such
             let reminderStartIndex = 3; // Assumes timezone is provided
+
+            let timeZoneDisplay = timeZoneFull;
+
             if (!parts[2] || isNaN(ms(parts[2]))) {
                 const tz = parts[2].toUpperCase();
                 if (moment.tz.zone(tz) || timezoneMapping[tz]) {
                     timeZoneFull = timezoneMapping[tz] || tz;
                     timeZoneDisplay = tz; // Displays user input as entered
                 } else {
+                    // Hardcoding default timezone to 'America/New_York' which follows EST/EDT
+                    timeZoneFull = 'America/New_York';
+                    const now = moment.tz(timeZoneFull);
                     timeZoneFull = moment.tz.guess(); // Uses system time zone if not specified or invalid
-                    timeZoneDisplay = moment.tz(timeZoneFull).format('z'); // Uses abbreviated timezone for display
+                    timeZoneDisplay = now.isDST() ? 'EDT' : 'EST';
                     reminderStartIndex = 2; // No timezone, so reminder starts from 2nd part
                     console.log("User did not specify a timezone or it was invalid. Default system timezone will be used.");
                 }
