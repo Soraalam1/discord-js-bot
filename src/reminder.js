@@ -3,6 +3,7 @@ const ms = require('ms');
 function handleReminder(message) {
     const initialD = new Date();
     const initialTime = initialD.toLocaleTimeString();
+
     if (message.content.startsWith('!remindme')) {
         console.log(`Reminder request for ${message.author.username} found in message: "${message.content}"\nInitiated at ${initialTime}`);
 
