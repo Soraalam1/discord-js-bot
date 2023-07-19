@@ -22,13 +22,4 @@ client.on("messageCreate", async (message) => {
     // TODO: Twitter API is paywalled, need a workaround for checking for videos
     //await checkMessageAndVx(message);
     handleReminder(message);
-    testAutoDeploy(message);
 });
-
-// Temporary
-
-function testAutoDeploy(message) {
-    if (message.content.startsWith('!auto')) {
-        message.reply('Yes! This version of the bot automatically deployed with the master branch being updated.')
-    }
-}
