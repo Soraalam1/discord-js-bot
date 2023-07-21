@@ -1,12 +1,19 @@
 const axios = require('axios');
 
 let correctWord = undefined;
+let isAnswered = false;
+let isGameRunning = false;
+let numberOfRounds = 0;
+let numberOfSeconds = 0;
 
 const handleWordRace = (interaction) => {
     if(interaction.commandName === 'wordrace'){
+        numberOfRounds = interaction.options.get('rounds');
+        numberOfSeconds = interaction.options.get('time');
         getWord(interaction);
     }
 }
+
 const getWord = async (interaction) => {
     try {
         await axios.get('https://random-word-api.herokuapp.com/word').then(response =>{
@@ -29,5 +36,19 @@ const bubbleFormatter = (word) => {
     return bubbleWord;
 }
 
+const handleCorrectWord = (message) => {
+    if(correctWord){
+        if(message.content.toLowerCase() === correctWord){
+            message.reply(`Congrats ${message.author} you were first to type ${correctWord}!`);
+            correctWord = undefined;
+        }
+    }
 
-module.exports = {handleWordRace};
+}
+
+const startGame = (interaction) => {
+    isGameRunning = true;
+
+}
+
+module.exports = {handleWordRace, handleCorrectWord};
