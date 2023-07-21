@@ -2,7 +2,7 @@ const {Client: DiscordClient, IntentsBitField} = require('discord.js');
 require('dotenv').config();
 const {checkMessageAndVx} = require("./vx-util");
 const {handleReminder} = require("./reminder");
-const {handleWordRace} = require("./wordrace");
+const {handleWordRace, handleCorrectWord} = require("./wordrace");
 const { registerCommands } = require('./register-commands');
 
 
@@ -32,4 +32,6 @@ client.on("messageCreate", async (message) => {
     // TODO: Twitter API is paywalled, need a workaround for checking for videos
     //await checkMessageAndVx(message);
     handleReminder(message);
+    handleCorrectWord(message);
+    
 });
