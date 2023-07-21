@@ -22,13 +22,13 @@ function handleReminder(message) {
 
         const parts = message.content.split(' ');
 
-        let timeZoneFull = moment.tz.guess(); // Sets default timezone to system timezone
-
         if (!parts[1]) {
             message.channel.send('Sorry, it looks like you used the command wrong. Remember, the syntax is !remindme (time/duration) (timezone optional) (reminder)');
             console.log(`User ${message.author.username} submitted an invalid reminder request.`);
             return;
         }
+
+        let timeZoneFull = 'America/New_York';
 
         let timeOrDuration = parts[1];
         let reminder;
@@ -62,7 +62,6 @@ function handleReminder(message) {
                     // Hardcoding default timezone to 'America/New_York' which follows EST/EDT
                     timeZoneFull = 'America/New_York';
                     const now = moment.tz(timeZoneFull);
-                    timeZoneFull = moment.tz.guess(); // Uses system time zone if not specified or invalid
                     timeZoneDisplay = now.isDST() ? 'EDT' : 'EST';
                     reminderStartIndex = 2; // No timezone, so reminder starts from 2nd part
                     console.log("User did not specify a timezone or it was invalid. Default timezone will be used.");

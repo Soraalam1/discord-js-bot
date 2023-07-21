@@ -22,6 +22,12 @@ jobs:
           node -v &&
           sudo npm install -g pm2 && 
           pm2 stop Tsureimu && 
+          export BOT_TOKEN=${{ secrets.BOT_TOKEN }} &&
+          echo $BOT_TOKEN &&
+          export CLIENT_ID=${{ secrets.CLIENT_ID }} &&
+          echo $CLIENT_ID &&
+          export GUILD_ID=${{ secrets.GUILD_ID }} &&
+          echo $GUILD_ID &&
           git pull origin master &&
           npm install &&
           npm ci &&
