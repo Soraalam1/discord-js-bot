@@ -24,7 +24,6 @@ client.on("ready", async (client) => {
 
 client.on('interactionCreate', async (interaction) =>{
     if(!interaction.isChatInputCommand()) return
-    console.log(interaction);
     await handleWordRace(interaction);
 });
 

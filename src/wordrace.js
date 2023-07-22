@@ -4,12 +4,13 @@ let correctWord = undefined;
 let numberOfRounds = 0;
 let isFirstReply = true;
 let isGameOngoing = false;
+let gameLocation = null;
 let discordChannel = null;
 
 const handleWordRace = async (interaction) => {
     if(interaction.commandName === 'wordrace'){
         if(isGameOngoing){
-            interaction.reply('WAIT! A game is going on right now!');
+            interaction.reply(`WAIT! A game is going on right now in the ${gameLocation} chat!`);
             return;
         }
         isFirstReply = true;
@@ -24,6 +25,7 @@ const handleWordRace = async (interaction) => {
 const postReady = async (interaction) => {
     if(numberOfRounds > 0){
         isGameOngoing = true;
+        gameLocation = `<#${interaction.channelId}>`;
     isFirstReply ? interaction.reply(`Get ready for the word in 5 seconds! There are ${numberOfRounds} rounds in this game! `) :
                  discordChannel.send(`Get ready for the word in 5 seconds! There are ${numberOfRounds} left!`);
     isFirstReply = false;
