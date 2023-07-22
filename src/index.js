@@ -22,10 +22,9 @@ client.on("ready", async (client) => {
     console.log(`${client.user.username} is ready!`);
 });
 
-client.on('interactionCreate',(interaction) =>{
+client.on('interactionCreate', async (interaction) =>{
     if(!interaction.isChatInputCommand()) return
-    console.log(interaction);
-    handleWordRace(interaction);
+    await handleWordRace(interaction);
 });
 
 client.on("messageCreate", async (message) => {

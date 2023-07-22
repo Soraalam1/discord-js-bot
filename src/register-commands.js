@@ -11,12 +11,8 @@ const commands = [
                 description: 'The number of rounds',
                 type: ApplicationCommandOptionType.Number,
                 required: true,
-            },
-            {
-                name: 'time',
-                description: 'The amount of time for each round (in seconds)',
-                type: ApplicationCommandOptionType.Number,
-                required: true,
+                min_value: 1,
+                max_value: 12,
             },
         ]
     },
@@ -26,13 +22,13 @@ const rest = new REST({version:'10'}).setToken(process.env.BOT_TOKEN);
 
 const registerCommands = async () => {
     try {
-        console.log('Registering slash comands...');
+        console.log('Registering slash commands...');
 
         await rest.put(
             Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
             { body: commands }
         )
-        console.log('Slash commands were registered sucessfully!');
+        console.log('Slash commands were registered successfully!');
     } catch (error) {
         console.log(`There was an error: ${error}`);
     }
