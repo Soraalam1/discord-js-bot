@@ -25,7 +25,9 @@ const handleWordRace = async (interaction) => {
 const postReady = async (interaction) => {
     if(numberOfRounds > 0){
         isGameOngoing = true;
+        if(interaction){
         gameLocation = `<#${interaction.channelId}>`;
+        }
     isFirstReply ? interaction.reply(`Get ready for the word in 5 seconds! There are ${numberOfRounds} rounds in this game! `) :
                  discordChannel.send(`Get ready for the word in 5 seconds! There are ${numberOfRounds} left!`);
     isFirstReply = false;
@@ -63,7 +65,6 @@ const bubbleFormatter = (word) => {
 
 const handleCorrectWord = (message) => {
     if(correctWord){
-        console.log(message);
         if(message.content.toLowerCase() === correctWord){
             message.reply(`Congrats ${message.author} you were first to type ${correctWord}!`);
             correctWord = undefined;
