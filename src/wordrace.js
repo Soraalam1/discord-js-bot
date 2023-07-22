@@ -1,28 +1,51 @@
 const axios = require('axios');
 
 let correctWord = undefined;
-let isAnswered = false;
-let isGameRunning = false;
 let numberOfRounds = 0;
-let numberOfSeconds = 0;
+let isFirstReply = true;
+let isGameOngoing = false;
+let discordChannel = null;
 
-const handleWordRace = (interaction) => {
+const handleWordRace = async (interaction) => {
     if(interaction.commandName === 'wordrace'){
-        numberOfRounds = interaction.options.get('rounds');
-        numberOfSeconds = interaction.options.get('time');
-        getWord(interaction);
+        if(isGameOngoing){
+            interaction.reply('WAIT! A game is going on right now!');
+            return;
+        }
+        isFirstReply = true;
+        numberOfRounds = await interaction.options.get('rounds').value;
+        discordChannel = await interaction.channel;
+
+
+        await postReady(interaction);
     }
 }
 
-const getWord = async (interaction) => {
+const postReady = async (interaction) => {
+    if(numberOfRounds > 0){
+        isGameOngoing = true;
+    isFirstReply ? interaction.reply(`Get ready for the word in 5 seconds! There are ${numberOfRounds} rounds in this game! `) :
+                 discordChannel.send(`Get ready for the word in 5 seconds! There are ${numberOfRounds} left!`);
+    isFirstReply = false;
+    postWord();
+    }
+    else{
+        isGameOngoing = false;
+        discordChannel.send(`The game is done!`)
+    }
+}
+
+const postWord = async () => {
     try {
         await axios.get('https://random-word-api.herokuapp.com/word').then(response =>{
-            console.log(response.data[0]);
             correctWord = response.data[0];
-            const message = (bubbleFormatter(response.data[0]));                    
-            interaction.reply(`${message}`)
+            const message = (bubbleFormatter(response.data[0]));
+            //todo: add typing from the bot
+            setTimeout(async () =>{
+                await discordChannel.send(`${message}`); 
+            },5000)
         })
-    } catch (error) {
+        } catch (error) {
         console.log(error);
     }
 }
@@ -38,17 +61,17 @@ const bubbleFormatter = (word) => {
 
 const handleCorrectWord = (message) => {
     if(correctWord){
+        console.log(message);
         if(message.content.toLowerCase() === correctWord){
             message.reply(`Congrats ${message.author} you were first to type ${correctWord}!`);
             correctWord = undefined;
+            clearInterval();
+            numberOfRounds--;
+            postReady();
         }
     }
 
 }
 
-const startGame = (interaction) => {
-    isGameRunning = true;
-
-}
 
 module.exports = {handleWordRace, handleCorrectWord};
