@@ -56,8 +56,6 @@ const determineTimeZone = (interaction, timeZoneFull = 'America/New_York') => {
         timeZoneFull = tz;
     } else if (abbreviationMapping[tz]) {
         timeZoneFull = abbreviationMapping[tz];
-    } else {
-        console.log("User did not specify a timezone or it was invalid.");
     }
     return timeZoneFull;
 };
