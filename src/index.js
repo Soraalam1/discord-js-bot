@@ -29,8 +29,10 @@ client.on('interactionCreate', async (interaction) =>{
 });
 
 client.on("messageCreate", async (message) => {
-    await checkMessageAndVx(message);
+    // instant
     handleReminder(message);
     handleCorrectWord(message);
-    
+
+    // await
+    await checkMessageAndVx(message);
 });
