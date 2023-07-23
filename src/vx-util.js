@@ -1,4 +1,3 @@
-const {TwitterApi} = require('twitter-api-v2');
 const {twitterScraper} = require("./twitter");
 
 
