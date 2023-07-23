@@ -16,6 +16,57 @@ const commands = [
             },
         ]
     },
+    {
+        name: 'remindme',
+        description: 'Set a reminder by specifying time or duration',
+        options: [
+            {
+                name: 'reminder',
+                description: 'The message you want to remind yourself with',
+                type: ApplicationCommandOptionType.String,
+                required: true,
+            },
+            {
+                name: 'time',
+                description: 'Can be duration or specific time',
+                type: ApplicationCommandOptionType.String,
+                required: true,
+            },
+            {
+                name: 'timezone',
+                description: 'Timezone for reminder',
+                type: ApplicationCommandOptionType.String,
+                required: false,
+                choices:
+                [
+                    {
+                        name: 'PST/PDT',
+                        value: 'America/Los_Angeles'
+                    },
+                    {
+                        name: 'MST/MDT',
+                        value: 'America/Denver'
+                    },
+                    {
+                        name: 'CST/CDT',
+                        value: 'America/Chicago'
+                    },
+                    {
+                        name: 'EST/EDT',
+                        value: 'America/New_York'
+                    },
+                    {
+                        name: 'LBT',
+                        value: 'Asia/Beirut'
+                    },
+                    {
+                        name: 'BST/GMT',
+                        value: 'Europe/London'
+                    }
+                ],
+            },
+        ]
+    }
 ];
 
 const rest = new REST({version:'10'}).setToken(process.env.BOT_TOKEN);
