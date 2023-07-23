@@ -26,6 +26,7 @@ client.on("ready", async (client) => {
 client.on('interactionCreate', async (interaction) =>{
     if(!interaction.isChatInputCommand()) return
     await handleWordRace(interaction);
+    handleReminder(interaction);
 });
 
 client.on("messageCreate", async (message) => {

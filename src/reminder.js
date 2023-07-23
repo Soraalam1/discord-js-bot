@@ -1,104 +1,111 @@
 const ms = require('ms');
 const moment = require('moment-timezone');
 
+
 // Maps common timezone abbreviations to full names (we are ignoring China Standard Time)
 const timezoneMapping = {
-    'PST': 'America/Los_Angeles',
-    'PDT': 'America/Los_Angeles',
-    'MST': 'America/Denver',
-    'MDT': 'America/Denver',
-    'CST': 'America/Chicago',
-    'CDT': 'America/Chicago',
-    'EST': 'America/New_York',
-    'EDT': 'America/New_York'
-}
+    'America/Los_Angeles': 'PST/PDT' ,
+    'America/Denver' : 'MST/MDT' ,
+    'America/Chicago': 'CST/CDT' ,
+    'America/New_York': 'EST/EDT' ,
+    'Asia/Beirut' : 'LBT',
+    'Europe/London' : 'BST/GMT',
+};
 
-function handleReminder(message) {
+
+const logReminderRequest = (interaction) => {
     const initialD = new Date();
     const initialTime = initialD.toLocaleTimeString();
+    console.log(`Reminder request for ${interaction.user.username} found in interaction: "${interaction.options}"\nInitiated at ${initialTime}`);
+};
 
-    if (message.content.startsWith('!remindme')) {
-        console.log(`Reminder request for ${message.author.username} found in message: "${message.content}"\nInitiated at ${initialTime}`);
 
-        const parts = message.content.split(' ');
+const parseInteraction = (interaction) => {
+    const timeOrDuration = interaction.options.get('time').value;
+    let reminder = interaction.options.get('reminder').value;
 
-        if (!parts[1]) {
-            message.channel.send('Sorry, it looks like you used the command wrong. Remember, the syntax is !remindme (time/duration) (timezone optional) (reminder)');
-            console.log(`User ${message.author.username} submitted an invalid reminder request.`);
-            return;
-        }
+    return {timeOrDuration, reminder};
+};
 
-        let timeZoneFull = 'America/New_York';
 
-        let timeOrDuration = parts[1];
-        let reminder;
+const abbreviationMapping = Object.fromEntries(
+    Object.entries(timezoneMapping).map(([key, value]) => [value, key])
+);
+
+const getCurrentAbbreviation = (zone) => {
+    const now = moment().tz(zone);
+    return now.format('z');
+}
+
+
+const setDurationReminder = (interaction, timeOrDuration, reminder) => {
+    interaction.reply(`Okay, I'll remind you with: "${reminder}" in ${timeOrDuration}.`);
+
+    setTimeout(() => {
+        const d = new Date();
+        const time = d.toLocaleTimeString();
+        interaction.channel.send(`${interaction.member} Reminder: ${reminder}`);
+        console.log(`Reminder for ${interaction.user.username} fulfilled at ${time}`);
+    }, ms(timeOrDuration));
+};
+
+
+const determineTimeZone = (interaction, timeZoneFull = 'America/New_York') => {
+    const tz = interaction.options.get('timezone').value;
+    if (moment.tz.zone(tz)) {
+        timeZoneFull = tz;
+    } else if (abbreviationMapping[tz]) {
+        timeZoneFull = abbreviationMapping[tz];
+    }
+    return timeZoneFull;
+};
+
+
+const setTimeReminder = (interaction, timeOrDuration, reminder, timeZoneFull) => {
+    const targetMoment = moment.tz(timeOrDuration, 'h:mm A', timeZoneFull);
+    const currentTime = moment().tz(timeZoneFull);
+
+    const timeDifferenceInMs = targetMoment.diff(currentTime);
+
+    if (timeDifferenceInMs < 0) {
+        interaction.reply(`You've set a reminder for a time that's already passed. You specified ${timeOrDuration}, but
+                       current time in ${getCurrentAbbreviation(timeZoneFull)} is ${currentTime.format('h:mm A')}`);
+        console.log("Invalid reminder: Time specified is in the past.");
+        return;
+    }
+
+    console.log(`Target moment: ${targetMoment.format()}`);
+    console.log(`Current time: ${currentTime.format()}`);
+
+    interaction.reply(`Okay, I'll remind you with: "${reminder}" at ${timeOrDuration} ${getCurrentAbbreviation(timeZoneFull)}.`);
+
+    setTimeout(() => {
+        console.log('Reminder fired')
+        const d = new Date();
+        const reminderTime = d.toLocaleTimeString();
+        interaction.channel.send(`${interaction.member} Reminder: ${reminder}`);
+        console.log(`Reminder for ${interaction.user.username} fulfilled at ${reminderTime}`);
+    }, timeDifferenceInMs);
+};
+
+
+const handleReminder = (interaction) => {
+    if (interaction.commandName === 'remindme') {
+        logReminderRequest(interaction);
+
+        const {timeOrDuration, reminder} = parseInteraction(interaction);
 
         // Check if timeOrDuration is a duration (like "5 hours") or a time (like "10:00 PM")
         const duration = ms(timeOrDuration);
         if (!isNaN(duration)) {
             // It's a duration, so we'll treat it as such
-            reminder = parts.slice(2).join(' ');
-
-            message.reply(`Okay, I'll remind you with: "${reminder}" in ${timeOrDuration}.`);
-
-            setTimeout(() => {
-                const d = new Date();
-                const time = d.toLocaleTimeString();
-                message.reply(`Reminder: ${reminder}`);
-                console.log(`Reminder for ${message.author.username} fulfilled at ${time}`);
-            }, duration);
+            setDurationReminder(interaction, timeOrDuration, reminder);
         } else {
             // It's a time, so we'll treat it as such
-            let reminderStartIndex = 3; // Assumes timezone is provided
-
-            let timeZoneDisplay = timeZoneFull;
-
-            if (!parts[2] || isNaN(ms(parts[2]))) {
-                const tz = parts[2].toUpperCase();
-                if (moment.tz.zone(tz) || timezoneMapping[tz]) {
-                    timeZoneFull = timezoneMapping[tz] || tz;
-                    timeZoneDisplay = tz; // Displays user input as entered
-                } else {
-                    // Hardcoding default timezone to 'America/New_York' which follows EST/EDT
-                    timeZoneFull = 'America/New_York';
-                    const now = moment.tz(timeZoneFull);
-                    timeZoneDisplay = now.isDST() ? 'EDT' : 'EST';
-                    reminderStartIndex = 2; // No timezone, so reminder starts from 2nd part
-                    console.log("User did not specify a timezone or it was invalid. Default timezone will be used.");
-                }
-            }
-
-            const reminder = parts.slice(reminderStartIndex).join(' ');
-
-            const targetMoment = moment.tz(timeOrDuration, 'h:mm A', timeZoneFull);
-            const currentTime = moment().tz(timeZoneFull);
-
-            const timeDifferenceInMs = targetMoment.diff(currentTime);
-
-            if (timeDifferenceInMs < 0) {
-                message.reply(`You've set a reminder for a time that's already passed. You specified ${timeOrDuration}, but current time in ${timeZoneFull} is ${currentTime.format('h:mm A')}`);
-                console.log("Invalid reminder: Time specified is in the past.");
-                return;
-            }
-
-            console.log(`Target moment: ${targetMoment.format()}`);
-            console.log(`Current time: ${currentTime.format()}`);
-
-            if (reminderStartIndex == 2) {
-                message.reply(`You did not specify a time zone. I'll remind you with: "${reminder}" at ${timeOrDuration} ${timeZoneDisplay}. If you would like to use your own timezone, please specify next time: !remindme (time/duration) (timezone) (reminder)`);
-            } else {
-                message.reply(`Okay, I'll remind you with: "${reminder}" at ${timeOrDuration} ${timeZoneDisplay}.`);
-            }
-
-            setTimeout(() => {
-                console.log('Reminder fired')
-                const d = new Date();
-                const reminderTime = d.toLocaleTimeString();
-                message.reply(`Reminder: ${reminder}`);
-                console.log(`Reminder for ${message.author.username} fulfilled at ${reminderTime}`);
-            }, timeDifferenceInMs);
+            const timeZoneFull = determineTimeZone(interaction);
+            setTimeReminder(interaction, timeOrDuration, reminder, timeZoneFull);
         }
     }
-}
+};
 
 module.exports = {handleReminder};
