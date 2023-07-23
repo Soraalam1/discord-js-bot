@@ -31,4 +31,3 @@ jobs:
                   
                 GUILD_ID="${{ secrets.GUILD_ID }}"' >.env
           pm2 start Tsureimu && 
-          exit
