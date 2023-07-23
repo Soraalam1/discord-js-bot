@@ -76,7 +76,7 @@ const registerCommands = async () => {
         console.log('Registering slash commands...');
 
         await rest.put(
-            Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
+            Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID, process.env.DISCORD_GUILD_ID),
             { body: commands }
         )
         console.log('Slash commands were registered successfully!');
