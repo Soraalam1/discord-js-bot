@@ -30,4 +30,6 @@ jobs:
                 CLIENT_ID="${{ secrets.CLIENT_ID }}"
                   
                 GUILD_ID="${{ secrets.GUILD_ID }}"' >.env
+          cat .env
           pm2 start Tsureimu && 
+          exit
