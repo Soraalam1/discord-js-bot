@@ -52,11 +52,9 @@ const checkMessageAndVx = async (message) => {
     }
 
     // second suppression to see if it improves missed embeds
-    try {
-        await message.suppressEmbeds(true);
-    } catch (error) {
-        console.error(`Could not suppress embed for original message`, message.cleanContent, error);
-    }
+    setTimeout(async () => {
+        await message.suppressEmbeds();
+    }, 6000)
 }
 
 const removeParams = (message) => {
@@ -182,7 +180,6 @@ const decideNameForInsta = (username) => {
 }
 
 const createDiscordProfileFromMessage = async (message, URL) => {
-    // TODO: For some reason, this does not retrieve nicknames or display names. Plz revisit.
     let guildMember;
     try {
         guildMember = await message.guild.members.fetch(message?.author);
@@ -191,8 +188,8 @@ const createDiscordProfileFromMessage = async (message, URL) => {
     }
 
     return {
-        name: guildMember?.nickname ? decideName(guildMember.nickname, URL) : decideName(message.author.username, URL),
-        avatar: guildMember?.avatarURL() ? guildMember.avatarURL() : message.author.displayAvatarURL()
+        name: message.member?.displayName ? decideName(message.member.displayName, URL) : decideName(message.author.username, URL),
+        avatar: message.member?.avatarURL() ? message.member?.avatarURL() : message.author.displayAvatarURL()
     };
 }
 
