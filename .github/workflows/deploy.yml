@@ -25,9 +25,9 @@ jobs:
           git pull origin master &&
           npm install &&
           npm ci &&
-          echo 'BOT_TOKEN="${{ secrets.BOT_TOKEN }}"
+          echo 'BOT_TOKEN=${{ secrets.BOT_TOKEN }}
                   
-                CLIENT_ID="${{ secrets.CLIENT_ID }}"
+                CLIENT_ID=${{ secrets.CLIENT_ID }}
                   
-                GUILD_ID="${{ secrets.GUILD_ID }}"' >.env &&
+                GUILD_ID=${{ secrets.GUILD_ID }}' >.env &&
           pm2 start Tsureimu 
