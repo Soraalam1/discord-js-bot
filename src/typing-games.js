@@ -62,15 +62,12 @@ const postReady = async (interaction) => {
     timeoutId = setTimeout(() => {
         discordChannel.send(`Nobody typed it in time. The correct answer was: **${correctAnswer}**!`)
         numberOfRounds--
+        correctAnswer = null;
         postReady();
     }, 30000)
     }
     else{
-        isGameOngoing = false;
-        discordChannel.send(`The game is done!`)
-        showLeaderBoard();
-        leaderBoard = [];
-        currentGame = null;
+        showAndResetLeaderboard(`The game is done!`);
     }
 }
 
@@ -92,9 +89,9 @@ const postPokedexEntry = async () => {
 
     await axios.get(`${currentGame.apiUri}/counts`).then(response =>{
         totalPokemonCount = response.data.total;
-    }).catch(errror => {
-        //TODO: add cancel game here
-        console.log(errror);
+    }).catch(error => {
+        showAndResetLeaderboard('The game is ending early due to an unexpected error.');
+        console.log(error);
     });
 
     let randomPokemonNumber = getRandomInteger(1, totalPokemonCount);
@@ -102,28 +99,13 @@ const postPokedexEntry = async () => {
     await axios.get(`${currentGame.apiUri}/${randomPokemonNumber}`).then(response =>{
         console.log(response.data[0].name)
         correctAnswer = response.data[0].name
-        let message = `Guess the Pokemon from this description: *${response.data[0].description}*`;
-        message = censorCorrectAnswerFromMessage(message);
+        let message = `Guess the POKéMON from this description: \n*${response.data[0].description}*`;
+        message = censorCorrectAnswerFromMessage(message, 'POKéMON');
         typeAndSendMessage(message);
-    }).catch(errror => {
-        //TODO: add cancel game here
-        console.log(errror);
+    }).catch(error => {
+        showAndResetLeaderboard('The game is ending early due to an unexpected error.');
+        console.log(error);
     });
-}
-
-function censorCorrectAnswerFromMessage(message) {
-    //TODO could be cleaned up
-    let correctedMessage;
-    correctedMessage = message.replaceAll(correctAnswer, 'POKEMON');
-    correctedMessage = message.replaceAll(correctAnswer.toLowerCase(), 'POKEMON');
-    correctedMessage = message.replaceAll(correctAnswer.toUpperCase(), 'POKEMON');
-    return correctedMessage;
-
-}
-
-function getRandomInteger(min, max) {
-    console.log(Math.floor(Math.random() * (max - min) ) + min)
-    return Math.floor(Math.random() * (max - min + 1) ) + min;
 }
 
 const postWord = async () => {
@@ -136,7 +118,7 @@ const postWord = async () => {
             typeAndSendMessage(message);
         })
     } catch (error) {
-        //TODO: add cancel game here
+        endGameWithMessage('The game is ending early due to an unexpected error.');
         console.log(error);
     }
 }
@@ -158,6 +140,19 @@ const bubbleFormatter = (word) => {
         bubbleWord = bubbleWord.concat(" ", letter);
     }
     return bubbleWord;
+}
+function censorCorrectAnswerFromMessage(message, replaceWith) {
+    //TODO could be cleaned up
+    let correctedMessage;
+    correctedMessage = message.replaceAll(correctAnswer, replaceWith);
+    correctedMessage = message.replaceAll(correctAnswer.toLowerCase(), replaceWith);
+    correctedMessage = message.replaceAll(correctAnswer.toUpperCase(), replaceWith);
+    return correctedMessage;
+
+}
+
+function getRandomInteger(min, max) {
+    return Math.floor(Math.random() * (max - min + 1) ) + min;
 }
 
 const createPlayerEntry = (author, points = 1) => {
@@ -181,7 +176,8 @@ const addPoint = (message) => {
     }
 }
 
-const showLeaderBoard = () => {
+const showAndResetLeaderboard = (message) => {
+    discordChannel.send(message);
 
     if (leaderBoard.length < 1) {
         discordChannel.send('Nobody earned any points at all. Try harder!');
@@ -215,6 +211,10 @@ const showLeaderBoard = () => {
     discordChannel.send({ embeds: [exampleEmbed]});
 
     discordChannel.send(`Congrats <@${leaderBoard[0].player.id}> on winning!`);
+
+    leaderBoard = [];
+    currentGame = null;
+    isGameOngoing = false;
 }
 
 const handleCorrectAnswer = (message) => {
