@@ -11,7 +11,8 @@ const client = new DiscordClient({
         IntentsBitField.Flags.Guilds,
         IntentsBitField.Flags.GuildMembers,
         IntentsBitField.Flags.GuildMessages,
-        IntentsBitField.Flags.MessageContent
+        IntentsBitField.Flags.MessageContent,
+        IntentsBitField.Flags.GuildPresences,
     ]
 });
 
@@ -29,8 +30,7 @@ client.on('interactionCreate',(interaction) =>{
 });
 
 client.on("messageCreate", async (message) => {
-    // TODO: Twitter API is paywalled, need a workaround for checking for videos
-    //await checkMessageAndVx(message);
+    await checkMessageAndVx(message);
     handleReminder(message);
     handleCorrectWord(message);
     
