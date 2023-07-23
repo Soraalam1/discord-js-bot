@@ -66,6 +66,20 @@ const commands = [
                 ],
             },
         ]
+    },
+    {
+        name: 'pokedex',
+        description: "Guess a Pokemon from reading it's Pokedex entry!",
+        options: [
+            {
+                name: 'rounds',
+                description: 'The number of rounds',
+                type: ApplicationCommandOptionType.Number,
+                required: true,
+                min_value: 1,
+                max_value: 12,
+            },
+        ]
     }
 ];
 

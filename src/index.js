@@ -2,7 +2,7 @@ const {Client: DiscordClient, IntentsBitField} = require('discord.js');
 require('dotenv').config();
 const {checkMessageAndVx} = require("./vx-util");
 const {handleReminder} = require("./reminder");
-const {handleWordRace, handleCorrectWord} = require("./wordrace");
+const {handleWordRace, handleCorrectWord} = require("./typing-games");
 const { registerCommands } = require('./register-commands');
 
 
@@ -16,7 +16,7 @@ const client = new DiscordClient({
     ]
 });
 
-client.login(`${process.env.BOT_TOKEN}`);
+client.login(`${process.env.BOT_TOKEN}`).catch(error => console.log(error));
 
 client.on("ready", async (client) => {
     await registerCommands();
