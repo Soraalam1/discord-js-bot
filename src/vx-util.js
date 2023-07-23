@@ -1,4 +1,7 @@
 const {TwitterApi} = require('twitter-api-v2');
+const {twitterScraper} = require("./twitter");
+
+
 
 const twitter = new TwitterApi(`${process.env.TWITTER_API_KEY}`);
 
@@ -19,30 +22,30 @@ const checkMessageAndVx = async (message) => {
 
     let URL;
 
-    if (!message.content.includes("vxtwitter.com/") && message.content.includes("twitter.com/")) {
+    if (message.content.includes("twitter.com/")) {
         URL = await vxTwitter(message);
     }
 
-    if (!message.content.includes("vxtiktok.com/") && message.content.includes("tiktok.com/")) {
+    if (message.content.includes("tiktok.com/")) {
         URL = vxTikTok(message);
     }
 
-    if (!message.content.includes("ddinstagram.com/") && message.content.includes("instagram.com/")) {
+    if (message.content.includes("instagram.com/")) {
         URL = instaFix(message);
-    }
-
-    if (URL) {
-        try {
-            await message.suppressEmbeds();
-        } catch (error) {
-            console.error(`Could not suppress embed for original message`, message.cleanContent);
-        }
-    } else {
-        return;
     }
 
     if (isSpoiler(message.cleanContent)) {
         URL = `||${URL}||`;
+    }
+
+    if (!URL) {
+        return;
+    }
+
+    try {
+        await message.suppressEmbeds(true);
+    } catch (error) {
+        console.error(`Could not suppress embed for original message`, message.cleanContent, error);
     }
 
     const discordProfile = await createDiscordProfileFromMessage(message, URL);
@@ -51,6 +54,13 @@ const checkMessageAndVx = async (message) => {
         await postWithWebhook(message, URL, discordProfile);
     } catch (error) {
         console.error(`Unable to post new link with webhook`, message.cleanContent);
+    }
+
+    // second suppression to see if it improves missed embeds
+    try {
+        await message.suppressEmbeds(true);
+    } catch (error) {
+        console.error(`Could not suppress embed for original message`, message.cleanContent, error);
     }
 }
 
@@ -66,6 +76,7 @@ const vxTwitter = async (message) => {
     let tweetURL;
 
     let fixedMessage = message.cleanContent.replace("twitter.com/", "vxtwitter.com/");
+
     try {
         tweetURL = fixedMessage.match(/(https?:\/\/(.+?\.)?vxtwitter\.com(\/[A-Za-z0-9\-\._~:\/\?#\[\]@!$&'\(\)\*\+,;\=]*)?)/)[1];
     } catch (error) {
@@ -75,63 +86,31 @@ const vxTwitter = async (message) => {
 
     tweetURL = removeParams(tweetURL);
 
+
     const tweetID = tweetURL.match(/\d+$/)[0];
 
-    let tweet;
-    let media = false;
+    let videoWasFound = await scanTweetForVideo(tweetID);
 
-    tweet = await getTweet(tweetID).catch(err => console.error(err));
-
-    if (tweet?.data?.referenced_tweets) {
-        let quoteTweet;
-
-        for (let refTweet of tweet?.data?.referenced_tweets) {
-            if (refTweet?.type === 'quoted') {
-                let quoteTweetID = refTweet.id;
-                quoteTweet = await getTweet(quoteTweetID).catch(err => console.error(err));
-                if (quoteTweet?.includes?.media) {
-                    for (let mediaObj of quoteTweet?.includes?.media) {
-                        if (mediaObj.type === "video" || mediaObj.type === "animated_gif") {
-                            console.log(`Quoted tweet with video found in #${message.channel.name}, reposting with vx`);
-                            console.log(tweetURL);
-                            media = true;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    if (tweet?.includes?.media) {
-        for (let mediaObj of tweet?.includes?.media) {
-            if (mediaObj.type === "video" || mediaObj.type === "animated_gif") {
-                console.log(`tweet with video found in #${message.channel.name}, reposting with vx`);
-                console.log(tweetURL);
-                media = true;
-            }
-        }
-    }
-
-    if (media) {
+    if (videoWasFound) {
+        console.log(`twitter link with video found in #${message.channel.name}, reposting with vx`);
+        console.log(tweetURL);
         return tweetURL;
     }
 
     return false;
 }
 
-const getTweet = async (tweetID) => {
+const scanTweetForVideo = async (tweetID) => {
+
+    let targetTweet;
+
     try {
-        return await twitter.v2.singleTweet(tweetID, {
-            expansions: [
-                'attachments.media_keys',
-                "referenced_tweets.id"
-            ],
-            "tweet.fields": ['attachments'],
-            "media.fields": ["duration_ms"]
-        });
+        targetTweet = await twitterScraper.getTweet(tweetID);
     } catch (error) {
-        console.error(`Error during twitter API call`, error);
+        console.log('Could not scrape tweet with twitterScraper due to error: \n', error);
     }
+
+    return targetTweet.videos.length > 0 || targetTweet?.quotedStatus?.videos.length > 0;
 }
 
 
@@ -208,6 +187,7 @@ const decideNameForInsta = (username) => {
 }
 
 const createDiscordProfileFromMessage = async (message, URL) => {
+    // TODO: For some reason, this does not retrieve nicknames or display names. Plz revisit.
     let guildMember;
     try {
         guildMember = await message.guild.members.fetch(message?.author);
