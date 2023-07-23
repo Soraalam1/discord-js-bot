@@ -38,6 +38,7 @@ const postReady = async (interaction) => {
         isGameOngoing = false;
         discordChannel.send(`The game is done!`)
         showLeaderBoard();
+        leaderBoard = [];
     }
 }
 
