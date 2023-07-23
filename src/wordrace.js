@@ -74,7 +74,7 @@ const makeUser = (author) => {
     return player
 }
 
-const playerBoardCheck = (message) => {
+const addPoint = (message) => {
     let playerOnBoard = false;
     leaderBoard.forEach(rank => {
         if(rank.player == message.author){
@@ -92,14 +92,14 @@ const showLeaderBoard = () => {
     leaderBoard.sort((a,b) =>{
         return b.points - a.points
     });
-    let winnerString = `:first_place:<@${leaderBoard[0].player.id}> ${leaderBoard[0].points}\n`;
+    let winnerString = `:first_place:<@${leaderBoard[0].player.id}> ${leaderBoard[0].points} points\n`;
 
-    if(leaderBoard[1] != undefined){
-        winnerString = winnerString.concat(`:second_place:<@${leaderBoard[1].player.id}> ${leaderBoard[1].points}\n`)
+    if(leaderBoard[1]){
+        winnerString = winnerString.concat(`:second_place:<@${leaderBoard[1].player.id}> ${leaderBoard[1].points} points\n`)
     }
 
-    if(leaderBoard[2] != undefined){
-        winnerString = winnerString.concat(`:third_place:<@${leaderBoard[2].player.id}> ${leaderBoard[2].points}\n`)        
+    if(leaderBoard[2]){
+        winnerString = winnerString.concat(`:third_place:<@${leaderBoard[2].player.id}> ${leaderBoard[2].points} points\n`)        
     }
 
     const exampleEmbed = {
@@ -121,7 +121,7 @@ const showLeaderBoard = () => {
 const handleCorrectWord = (message) => {
     if(correctWord){
         if(message.content.toLowerCase() === correctWord){
-            playerBoardCheck(message);
+            addPoint(message);
             message.reply(`Congrats ${message.author} you were first to type **${correctWord}**!`);
             correctWord = undefined;
             clearInterval();
