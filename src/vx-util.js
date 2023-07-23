@@ -1,9 +1,4 @@
-const {TwitterApi} = require('twitter-api-v2');
 const {twitterScraper} = require("./twitter");
-
-
-
-const twitter = new TwitterApi(`${process.env.TWITTER_API_KEY}`);
 
 const checkMessageAndVx = async (message) => {
     if (message.author.bot) {
