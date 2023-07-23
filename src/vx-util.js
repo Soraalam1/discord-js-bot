@@ -29,12 +29,12 @@ const checkMessageAndVx = async (message) => {
         URL = instaFix(message);
     }
 
-    if (isSpoiler(message.cleanContent)) {
-        URL = `||${URL}||`;
-    }
-
     if (!URL) {
         return;
+    }
+
+    if (isSpoiler(message.cleanContent)) {
+        URL = `||${URL}||`;
     }
 
     try {
