@@ -1,5 +1,4 @@
 const axios = require('axios');
-const {time} = require("discord.js");
 
 const GAME_LIST = [
     {
@@ -156,11 +155,10 @@ function getRandomInteger(min, max) {
 }
 
 const createPlayerEntry = (author, points = 1) => {
-    const player = {
-        player : author,
+    return {
+        player: author,
         points: points
     }
-    return player
 }
 
 const addPoint = (message) => {
@@ -181,6 +179,9 @@ const showAndResetLeaderboard = (message) => {
 
     if (leaderBoard.length < 1) {
         discordChannel.send('Nobody earned any points at all. Try harder!');
+        leaderBoard = [];
+        currentGame = null;
+        isGameOngoing = false;
         return;
     }
 
