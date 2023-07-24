@@ -98,7 +98,7 @@ const postPokedexEntry = async () => {
     await axios.get(`${currentGame.apiUri}/${randomPokemonNumber}`).then(response =>{
         console.log(response.data[0].name)
         correctAnswer = response.data[0].name
-        let message = `Guess the POKéMON from this description: \n*${response.data[0].description}*`;
+        let message = `**Guess the POKéMON from this description:** \n*${response.data[0].description}*`;
         message = censorCorrectAnswerFromMessage(message, 'POKéMON');
         typeAndSendMessage(message);
     }).catch(error => {
@@ -117,7 +117,7 @@ const postWord = async () => {
             typeAndSendMessage(message);
         })
     } catch (error) {
-        endGameWithMessage('The game is ending early due to an unexpected error.');
+        showAndResetLeaderboard('The game is ending early due to an unexpected error.');
         console.log(error);
     }
 }
