@@ -143,11 +143,13 @@ const bubbleFormatter = (word) => {
 }
 function censorCorrectAnswerFromMessage(message, replaceWith) {
     //TODO could be cleaned up
-    let correctedMessage;
-    correctedMessage = message.replaceAll(correctAnswer, replaceWith);
-    correctedMessage = message.replaceAll(correctAnswer.toLowerCase(), replaceWith);
-    correctedMessage = message.replaceAll(correctAnswer.toUpperCase(), replaceWith);
-    return correctedMessage;
+    // let correctedMessage;
+    // correctedMessage = message.replaceAll(correctAnswer, replaceWith);
+    // correctedMessage = message.replaceAll(correctAnswer.toLowerCase(), replaceWith);
+    // correctedMessage = message.replaceAll(correctAnswer.toUpperCase(), replaceWith);
+
+    let regex = new RegExp(message, 'gi');
+    return message.replace(regex, replaceWith);
 
 }
 
