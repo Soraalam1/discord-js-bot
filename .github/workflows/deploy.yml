@@ -25,4 +25,5 @@ jobs:
           git pull origin master &&
           npm install &&
           npm ci &&
-          pm2 start src/index.js --name Tsureimu 
+          pm2 start src/index.js --name Tsureimu
+          
