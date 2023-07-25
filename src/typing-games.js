@@ -96,7 +96,7 @@ const postPokedexEntry = async () => {
 
     let randomPokemonNumber = getRandomInteger(1, totalPokemonCount);
 
-    await axios.get(`${currentGame.apiUri}/${randomPokemonNumber}`).then(response =>{
+    await axios.get(`${currentGame.apiUri}/${randomPokemonNumber}`).then(async response => {
         console.log(response.data[0].name)
         correctAnswer = response.data[0].name
         let message = `Guess the POKéMON from this description: \n*${response.data[0].description}*`;
@@ -118,7 +118,7 @@ const postWord = async () => {
             typeAndSendMessage(message);
         })
     } catch (error) {
-        endGameWithMessage('The game is ending early due to an unexpected error.');
+        showAndResetLeaderboard('The game is ending early due to an unexpected error.');
         console.log(error);
     }
 }
@@ -142,13 +142,7 @@ const bubbleFormatter = (word) => {
     return bubbleWord;
 }
 function censorCorrectAnswerFromMessage(message, replaceWith) {
-    //TODO could be cleaned up
-    // let correctedMessage;
-    // correctedMessage = message.replaceAll(correctAnswer, replaceWith);
-    // correctedMessage = message.replaceAll(correctAnswer.toLowerCase(), replaceWith);
-    // correctedMessage = message.replaceAll(correctAnswer.toUpperCase(), replaceWith);
-
-    let regex = new RegExp(message, 'gi');
+    let regex = new RegExp(correctAnswer, 'gi');
     return message.replace(regex, replaceWith);
 
 }
