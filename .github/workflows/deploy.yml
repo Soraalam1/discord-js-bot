@@ -21,8 +21,9 @@ jobs:
           sudo apt-get -o Dpkg::Options::="--force-overwrite" install -y nodejs &&
           node -v &&
           sudo npm install -g pm2 && 
-          pm2 stop Tsureimu && 
+          pm2 stop Tsureimu &&
           git pull origin master &&
           npm install &&
           npm ci &&
-          pm2 start src/index.js --name Tsureimu 
+          pm2 start src/index.js --name Tsureimu
+          

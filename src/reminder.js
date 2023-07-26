@@ -1,5 +1,6 @@
 const ms = require('ms');
 const moment = require('moment-timezone');
+const {time} = require("discord.js");
 
 
 // Maps common timezone abbreviations to full names (we are ignoring China Standard Time)
@@ -51,10 +52,11 @@ const setDurationReminder = (interaction, timeOrDuration, reminder) => {
 
 
 const determineTimeZone = (interaction, timeZoneFull = 'America/New_York') => {
-    const tz = interaction.options.get('timezone').value;
-    if (moment.tz.zone(tz)) {
+    const tzOption = interaction.options.get('timezone');
+    const tz = tzOption ? tzOption.value : null;
+    if (tz && moment.tz.zone(tz)) {
         timeZoneFull = tz;
-    } else if (abbreviationMapping[tz]) {
+    } else if (tz && abbreviationMapping[tz]) {
         timeZoneFull = abbreviationMapping[tz];
     }
     return timeZoneFull;
@@ -62,14 +64,26 @@ const determineTimeZone = (interaction, timeZoneFull = 'America/New_York') => {
 
 
 const setTimeReminder = (interaction, timeOrDuration, reminder, timeZoneFull) => {
-    const targetMoment = moment.tz(timeOrDuration, 'h:mm A', timeZoneFull);
+    let targetMoment = moment.tz(timeOrDuration, 'h:mm A', timeZoneFull);
     const currentTime = moment().tz(timeZoneFull);
+
+    // Adjust for cases where time was given without AM/PM
+    if (!timeOrDuration.toLowerCase().includes('am') && !timeOrDuration.toLowerCase().includes('pm')) {
+        let targetMomentAM = targetMoment.clone();
+        let targetMomentPM = targetMoment.clone().add(12, 'hours');
+
+        if (currentTime.isBetween(targetMomentAM, targetMomentPM)) {
+            targetMoment = targetMomentPM;
+        } else {
+            targetMoment = targetMomentAM;
+        }
+    }
 
     const timeDifferenceInMs = targetMoment.diff(currentTime);
 
     if (timeDifferenceInMs < 0) {
-        interaction.reply(`You've set a reminder for a time that's already passed. You specified ${timeOrDuration}, but
-                       current time in ${getCurrentAbbreviation(timeZoneFull)} is ${currentTime.format('h:mm A')}`);
+        interaction.reply(`You cannot set a reminder for a time that's already passed. You specified ${timeOrDuration}, but ` +
+                       `current time in ${getCurrentAbbreviation(timeZoneFull)} is ${currentTime.format('h:mm A')}.`);
         console.log("Invalid reminder: Time specified is in the past.");
         return;
     }
@@ -97,7 +111,11 @@ const handleReminder = (interaction) => {
 
         // Check if timeOrDuration is a duration (like "5 hours") or a time (like "10:00 PM")
         const duration = ms(timeOrDuration);
-        if (!isNaN(duration)) {
+        if (!isNaN(timeOrDuration) && !isNaN(duration)) {
+            // User has put a simple hour like '11' with no specified time zone, so we'll treat it as a time
+            let timeZoneFull = determineTimeZone(interaction, 'America/New_York');
+            setTimeReminder(interaction, `${timeOrDuration}:00`, reminder, timeZoneFull);
+        } else if (!isNaN(duration)) {
             // It's a duration, so we'll treat it as such
             setDurationReminder(interaction, timeOrDuration, reminder);
         } else {
