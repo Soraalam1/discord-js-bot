@@ -1,9 +1,10 @@
-const {Client: DiscordClient, IntentsBitField} = require('discord.js');
+const {Client: DiscordClient, IntentsBitField, AttachmentBuilder, EmbedBuilder} = require('discord.js');
 require('dotenv').config();
 const {checkMessageAndVx} = require("./vx-util");
 const {handleReminder} = require("./reminder");
-const {handleWordRace, handleCorrectWord} = require("./typing-games");
+const {handleGameStart, handleAnswerAttempt} = require("./typing-games");
 const { registerCommands } = require('./register-commands');
+const {createPokemonImage} = require("./image-processor");
 
 
 const client = new DiscordClient({
@@ -25,14 +26,27 @@ client.on("ready", async (client) => {
 
 client.on('interactionCreate', async (interaction) =>{
     if(!interaction.isChatInputCommand()) return
-    await handleWordRace(interaction);
+    handleGameStart(interaction);
     handleReminder(interaction);
 });
 
 client.on("messageCreate", async (message) => {
+    if (message.author.bot) {
+        return;
+    }
+
     // instant
     handleReminder(message);
-    handleCorrectWord(message);
+    handleAnswerAttempt(message);
+
+    // if (message.cleanContent.toLowerCase().includes('j')) {
+    //     let image = await createPokemonImage('', true);
+    //     let attachment = new AttachmentBuilder(image, {name: 'pokemon.png'});
+    //     let embed = new EmbedBuilder().setTitle(`It's **Pikachu!**`).setColor([255, 0, 0])
+    //         .setDescription('description').setImage('attachment://pokemon.png').setTimestamp(new Date()).toJSON();
+    //
+    //     message.reply({embeds: [embed], files: [attachment]})
+    // }
 
     // await
     await checkMessageAndVx(message);
