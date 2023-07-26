@@ -26,4 +26,3 @@ jobs:
           npm install &&
           npm ci &&
           pm2 start src/index.js --name Tsureimu
-          
