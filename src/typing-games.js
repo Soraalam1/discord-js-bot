@@ -294,6 +294,7 @@ const showAndResetLeaderboard = (message) => {
 const handleAnswerAttempt = async (message) => {
     if (correctAnswer) {
         if (message.content.toLowerCase() === correctAnswer.toLowerCase() && `<#${message.channel.id}>` === gameLocation) {
+            correctAnswer = null;
             clearTimeout(timeoutId);
             addPoint(message);
 
