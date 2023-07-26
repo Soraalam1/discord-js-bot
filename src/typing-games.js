@@ -72,7 +72,9 @@ const postReady = async (interaction) => {
         isFirstReply = false;
         await playRound();
         timeoutId = setTimeout(async () => {
-            await discordChannel.send(`Nobody typed it in time. The correct answer was: **${correctAnswer}**!`)
+            let answerWas = correctAnswer;
+            correctAnswer = null;
+            await discordChannel.send(`Nobody typed it in time. The correct answer was: **${answerWas}**!`)
 
             if (embedData.answer.embed) {
                 await discordChannel.send({
