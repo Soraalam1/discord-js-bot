@@ -294,11 +294,12 @@ const showAndResetLeaderboard = (message) => {
 const handleAnswerAttempt = async (message) => {
     if (correctAnswer) {
         if (message.content.toLowerCase() === correctAnswer.toLowerCase() && `<#${message.channel.id}>` === gameLocation) {
+            let answerWas = correctAnswer;
             correctAnswer = null;
             clearTimeout(timeoutId);
             addPoint(message);
 
-            await message.reply(`Congrats ${message.author} you were first to send the correct answer of **${correctAnswer}**!`);
+            await message.reply(`Congrats ${message.author} you were first to send the correct answer of **${answerWas}**!`);
 
             if (embedData.answer.embed) {
                 await message.channel.send({
