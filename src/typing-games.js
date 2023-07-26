@@ -115,7 +115,7 @@ const postPokedexEntry = async () => {
 
     await axios.get(`${currentGame.apiUri}/${randomPokemonNumber}`).then(async response => {
         console.log(response.data[0].name)
-        let pendingAnswer = response.data[0].name.split(' - ');
+        let pendingAnswer = removeUnnecessaryInfo(response.data[0].name);
 
         // Pokedex API has Rhydon's name wrong, hardcode fix
         if (randomPokemonNumber === 112) {
@@ -139,13 +139,21 @@ const postMysteryPokemon = async () => {
 
     await axios.get(`${currentGame.apiUri}/${randomPokemonNumber}`).then(async response => {
         console.log(response.data[0].name)
-        let pendingAnswer = response.data[0].name.split(' - ');
+        let pendingAnswer = removeUnnecessaryInfo(response.data[0].name);
         await buildPokemonEmbed(pendingAnswer[0], response.data[0].description, response.data[0].sprite, true);
         await typeMessageAndSetAnswer(null, pendingAnswer[0]);
     }).catch(error => {
         showAndResetLeaderboard('The game is ending early due to an unexpected error.');
         console.log(error);
     });
+}
+
+const removeUnnecessaryInfo = (pendingAnswer) => {
+    let answer = pendingAnswer.split(' - ');
+    answer = answer[0].split('♂️');
+    answer = answer[0].split('♀️');
+
+    return answer[0];
 }
 
 const findTotalPokemonCount = async () => {
