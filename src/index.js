@@ -35,7 +35,7 @@ client.on("messageCreate",  async (message) => {
     }
 
     handleReminder(message);
-    checkMessageAndVx(message);
+    await checkMessageAndVx(message);
     await handleAnswerAttempt(message);
 
 });
