@@ -39,15 +39,6 @@ client.on("messageCreate", async (message) => {
     handleReminder(message);
     handleAnswerAttempt(message);
 
-    // if (message.cleanContent.toLowerCase().includes('j')) {
-    //     let image = await createPokemonImage('', true);
-    //     let attachment = new AttachmentBuilder(image, {name: 'pokemon.png'});
-    //     let embed = new EmbedBuilder().setTitle(`It's **Pikachu!**`).setColor([255, 0, 0])
-    //         .setDescription('description').setImage('attachment://pokemon.png').setTimestamp(new Date()).toJSON();
-    //
-    //     message.reply({embeds: [embed], files: [attachment]})
-    // }
-
     // await
     await checkMessageAndVx(message);
 });
