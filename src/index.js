@@ -1,10 +1,9 @@
-const {Client: DiscordClient, IntentsBitField, AttachmentBuilder, EmbedBuilder} = require('discord.js');
+const {Client: DiscordClient, IntentsBitField} = require('discord.js');
 require('dotenv').config();
 const {checkMessageAndVx} = require("./vx-util");
 const {handleReminder} = require("./reminder");
 const {handleGameStart, handleAnswerAttempt} = require("./typing-games");
 const { registerCommands } = require('./register-commands');
-const {createPokemonImage} = require("./image-processor");
 
 
 const client = new DiscordClient({
@@ -30,15 +29,12 @@ client.on('interactionCreate', async (interaction) =>{
     handleReminder(interaction);
 });
 
-client.on("messageCreate", async (message) => {
+client.on("messageCreate",  (message) => {
     if (message.author.bot) {
         return;
     }
 
-    // instant
     handleReminder(message);
     handleAnswerAttempt(message);
-
-    // await
-    await checkMessageAndVx(message);
+    checkMessageAndVx(message);
 });

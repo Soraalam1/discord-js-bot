@@ -1,5 +1,5 @@
 const axios = require('axios');
-const {time, EmbedBuilder, AttachmentBuilder} = require("discord.js");
+const {EmbedBuilder, AttachmentBuilder} = require("discord.js");
 const {createPokemonImage} = require("./image-processor");
 
 const GAME_LIST = [
