@@ -116,6 +116,12 @@ const postPokedexEntry = async () => {
     await axios.get(`${currentGame.apiUri}/${randomPokemonNumber}`).then(async response => {
         console.log(response.data[0].name)
         let pendingAnswer = response.data[0].name.split(' - ');
+
+        // Pokedex API has Rhydon's name wrong, hardcode fix
+        if (randomPokemonNumber === 112) {
+            pendingAnswer = 'Rhydon';
+        }
+
         let message = `**Guess the Pokémon from this description:** \n*${response.data[0].description}*`;
         message = censorCorrectAnswerFromMessage(message, pendingAnswer, 'POKéMON');
         await buildPokemonEmbed(pendingAnswer[0], response.data[0].description, response.data[0].sprite, false);
