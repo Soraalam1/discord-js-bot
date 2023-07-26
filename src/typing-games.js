@@ -150,10 +150,10 @@ const postMysteryPokemon = async () => {
 
 const removeUnnecessaryInfo = (pendingAnswer) => {
     let answer = pendingAnswer.split(' - ');
-    answer = answer[0].split('♂️');
-    answer = answer[0].split('♀️');
+    answer = answer[0].replace('♂️', '');
+    answer = answer.replace('♀️', '');
 
-    return answer[0];
+    return answer;
 }
 
 const findTotalPokemonCount = async () => {
