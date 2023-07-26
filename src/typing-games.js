@@ -99,6 +99,7 @@ const playRound = async () => {
             break;
         case 'whosthatpokemon':
             await postMysteryPokemon();
+            break;
         default:
             break;
     }
