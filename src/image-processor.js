@@ -1,7 +1,4 @@
 const Canvas = require('@napi-rs/canvas');
-const createMysteryPokemonImage = () => {
-
-}
 
 const createPokemonImage = async (imageUrl, isHidden) => {
     const canvas = Canvas.createCanvas(1200, 1200);
