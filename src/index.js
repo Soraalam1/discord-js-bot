@@ -29,12 +29,13 @@ client.on('interactionCreate', async (interaction) =>{
     handleReminder(interaction);
 });
 
-client.on("messageCreate",  (message) => {
+client.on("messageCreate",  async (message) => {
     if (message.author.bot) {
         return;
     }
 
     handleReminder(message);
-    handleAnswerAttempt(message);
     checkMessageAndVx(message);
+    await handleAnswerAttempt(message);
+
 });
