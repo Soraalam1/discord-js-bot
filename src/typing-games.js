@@ -160,7 +160,6 @@ const buildPokemonEmbed = async (pokemonName, pokemonDescription, imageUrl, need
 
         let attachment = new AttachmentBuilder(image, {name: 'hiddenpokemon.png'});
 
-        console.log('setting embed.question.embed')
         embedData.question.embed = mysteryEmbed;
         embedData.question.attachment = attachment;
     }
