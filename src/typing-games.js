@@ -124,8 +124,8 @@ const postPokedexEntry = async () => {
 
         let message = `**Guess the Pokémon from this description:** \n*${response.data[0].description}*`;
         message = censorCorrectAnswerFromMessage(message, pendingAnswer, 'POKéMON');
-        await buildPokemonEmbed(pendingAnswer[0], response.data[0].description, response.data[0].sprite, false);
-        await typeMessageAndSetAnswer(message, pendingAnswer[0]);
+        await buildPokemonEmbed(pendingAnswer, response.data[0].description, response.data[0].sprite, false);
+        await typeMessageAndSetAnswer(message, pendingAnswer);
     }).catch(error => {
         showAndResetLeaderboard('The game is ending early due to an unexpected error.');
         console.log(error);
@@ -140,8 +140,8 @@ const postMysteryPokemon = async () => {
     await axios.get(`${currentGame.apiUri}/${randomPokemonNumber}`).then(async response => {
         console.log(response.data[0].name)
         let pendingAnswer = removeUnnecessaryInfo(response.data[0].name);
-        await buildPokemonEmbed(pendingAnswer[0], response.data[0].description, response.data[0].sprite, true);
-        await typeMessageAndSetAnswer(null, pendingAnswer[0]);
+        await buildPokemonEmbed(pendingAnswer, response.data[0].description, response.data[0].sprite, true);
+        await typeMessageAndSetAnswer(null, pendingAnswer);
     }).catch(error => {
         showAndResetLeaderboard('The game is ending early due to an unexpected error.');
         console.log(error);
