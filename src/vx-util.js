@@ -1,10 +1,6 @@
 const {twitterScraper} = require("./twitter");
 
 const checkMessageAndVx = async (message) => {
-    if (message.author.bot) {
-        return;
-    }
-
     if (message.content.includes("vxtwitter.com/") || message.content.includes("fxtwitter.com/") || message.content.includes("sxtwitter.com/") || message.content.includes("vxtiktok.com/")) {
         console.log(`${message.author.username} used vx on their link manually in ${message.channel.name}!`)
         return;

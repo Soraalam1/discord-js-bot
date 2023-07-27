@@ -56,7 +56,7 @@ const commands = [
                         value: 'America/New_York'
                     },
                     {
-                        name: 'LBT',
+                        name: 'EEST',
                         value: 'Asia/Beirut'
                     },
                     {
@@ -64,6 +64,34 @@ const commands = [
                         value: 'Europe/London'
                     }
                 ],
+            },
+        ]
+    },
+    {
+        name: 'pokedex',
+        description: "Guess the Pokemon from reading it's Pokedex entry!",
+        options: [
+            {
+                name: 'rounds',
+                description: 'The number of rounds',
+                type: ApplicationCommandOptionType.Number,
+                required: true,
+                min_value: 1,
+                max_value: 12,
+            },
+        ]
+    },
+    {
+        name: 'whosthatpokemon',
+        description: "Guess the Pokemon from looking at a silhouette!",
+        options: [
+            {
+                name: 'rounds',
+                description: 'The number of rounds',
+                type: ApplicationCommandOptionType.Number,
+                required: true,
+                min_value: 1,
+                max_value: 12,
             },
         ]
     }

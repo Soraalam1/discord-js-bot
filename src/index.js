@@ -2,7 +2,7 @@ const {Client: DiscordClient, IntentsBitField} = require('discord.js');
 require('dotenv').config();
 const {checkMessageAndVx} = require("./vx-util");
 const {handleReminder} = require("./reminder");
-const {handleWordRace, handleCorrectWord} = require("./wordrace");
+const {handleGameStart, handleAnswerAttempt} = require("./typing-games");
 const { registerCommands } = require('./register-commands');
 
 
@@ -16,7 +16,7 @@ const client = new DiscordClient({
     ]
 });
 
-client.login(`${process.env.BOT_TOKEN}`);
+client.login(`${process.env.BOT_TOKEN}`).catch(error => console.log(error));
 
 client.on("ready", async (client) => {
     await registerCommands();
@@ -25,15 +25,17 @@ client.on("ready", async (client) => {
 
 client.on('interactionCreate', async (interaction) =>{
     if(!interaction.isChatInputCommand()) return
-    await handleWordRace(interaction);
+    handleGameStart(interaction);
     handleReminder(interaction);
 });
 
-client.on("messageCreate", async (message) => {
-    // instant
-    handleReminder(message);
-    handleCorrectWord(message);
+client.on("messageCreate",  async (message) => {
+    if (message.author.bot) {
+        return;
+    }
 
-    // await
+    handleReminder(message);
     await checkMessageAndVx(message);
+    await handleAnswerAttempt(message);
+
 });
