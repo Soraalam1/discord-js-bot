@@ -93,15 +93,15 @@ const commands = [
                 choices:
                 [
                     {
-                        name: 'wordrace',
+                        name: '/wordrace',
                         value: 'word race typing game'
                     },
                     {
-                        name: 'remindme',
+                        name: '/remindme',
                         value: 'reminder'
                     },
                     {
-                        name: 'pokedex',
+                        name: '/pokedex',
                         value: 'pokedex typing game'
                     }
                 ],

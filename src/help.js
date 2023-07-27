@@ -6,7 +6,7 @@ const handleHelp = (interaction) =>
         const helpValue = interaction.options.get('command').value;
         if (helpValue == 'word race typing game')
         {
-            interaction.reply({ content: 'wordrace blah blah blah', ephemeral: true});
+            interaction.reply({ content: 'wordrace blah blah blah', ephemeral: true}); //"ephemeral: true" makes the text only readable to user
         }
         else if (helpValue == 'reminder')
         {
