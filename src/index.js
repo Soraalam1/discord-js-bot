@@ -3,6 +3,7 @@ require('dotenv').config();
 const {checkMessageAndVx} = require("./vx-util");
 const {handleReminder} = require("./reminder");
 const {handleWordRace, handleCorrectWord} = require("./typing-games");
+const { handleHelp } = require('./help');
 const { registerCommands } = require('./register-commands');
 
 
@@ -27,6 +28,7 @@ client.on('interactionCreate', async (interaction) =>{
     if(!interaction.isChatInputCommand()) return
     await handleWordRace(interaction);
     handleReminder(interaction);
+    handleHelp(interaction);
 });
 
 client.on("messageCreate", async (message) => {

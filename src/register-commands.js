@@ -80,6 +80,33 @@ const commands = [
                 max_value: 12,
             },
         ]
+    },
+    {
+        name: 'help',
+        description: "How to use specific slash commands",
+        options: [
+            {
+                name: 'command',
+                description: 'Command you need assistance with',
+                type: ApplicationCommandOptionType.String,
+                required: true,
+                choices:
+                [
+                    {
+                        name: 'wordrace',
+                        value: 'word race typing game'
+                    },
+                    {
+                        name: 'remindme',
+                        value: 'reminder'
+                    },
+                    {
+                        name: 'pokedex',
+                        value: 'pokedex typing game'
+                    }
+                ],
+            },
+        ]
     }
 ];
 
