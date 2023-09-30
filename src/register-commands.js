@@ -1,6 +1,29 @@
 require('dotenv').config();
 const { REST, Routes, ApplicationCommandOptionType} = require('discord.js');
 
+const ASSIGNABLE_ROLES = [
+    {
+        name: 'Straw Hats',
+        value: null    
+    },
+    {
+        name: 'Group Gamer',
+        value: null    
+    },
+    {
+        name: 'Stream Alerts',
+        value: null    
+    },
+    {
+        name: 'Watcher',
+        value: null    
+    },
+    {
+        name: 'D&D',
+        value: null    
+    },
+]
+
 const commands = [
     {
         name: 'wordrace',
@@ -94,15 +117,28 @@ const commands = [
                 max_value: 12,
             },
         ]
+    },
+    {
+        name: 'selfrole',
+        description: 'Assign yourself a role within the server!',
+        options: [
+            {
+                name: 'role',
+                description: 'The role you would like to add or remove',
+                type: ApplicationCommandOptionType.String,
+                required: true,
+                choices: ASSIGNABLE_ROLES,
+            }
+        ]
     }
 ];
 
 const rest = new REST({version:'10'}).setToken(process.env.BOT_TOKEN);
 
-const registerCommands = async () => {
+const registerCommands = async (client) => {
     try {
         console.log('Registering slash commands...');
-
+        updateRoleValues(client.guilds.cache.get(process.env.DISCORD_GUILD_ID).roles.cache);
         await rest.put(
             Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID, process.env.DISCORD_GUILD_ID),
             { body: commands }
@@ -112,5 +148,16 @@ const registerCommands = async () => {
         console.log(`There was an error: ${error}`);
     }
 };
+
+const updateRoleValues = (serverRoles) =>{
+    serverRoles.forEach(serverRole => {
+        ASSIGNABLE_ROLES.forEach(assignableRole => {
+            if(assignableRole.name === serverRole.name){
+                assignableRole.value = serverRole.id;
+            }
+        });
+    });
+    console.log(ASSIGNABLE_ROLES);
+}
 
 module.exports = { registerCommands };
