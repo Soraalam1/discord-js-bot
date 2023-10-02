@@ -19,6 +19,14 @@ const ASSIGNABLE_ROLES = [
         value: null    
     },
     {
+        name: 'Rando Gamer',
+        value: null
+    },
+    {
+        name: 'Smashers',
+        value: null
+    },
+    {
         name: 'D&D',
         value: null    
     },
@@ -133,7 +141,7 @@ const commands = [
     }
 ];
 
-const rest = new REST({version:'10'}).setToken(process.env.BOT_TOKEN);
+const rest = new REST({version:'10'}).setToken(process.env.DISCORD_BOT_TOKEN);
 
 const registerCommands = async (client) => {
     try {

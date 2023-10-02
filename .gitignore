@@ -2,3 +2,4 @@
 node_modules
 discord-js-bot.iml
 .env
+package-lock.json
