@@ -14,7 +14,9 @@ const checkMessageAndVx = async (message) => {
     let URL;
 
     if (message.content.includes("twitter.com/")) {
-        URL = await vxTwitter(message);
+        return;
+        //TODO: fix twitter AGAIN
+        //URL = await vxTwitter(message);
     }
 
     if (message.content.includes("tiktok.com/")) {
