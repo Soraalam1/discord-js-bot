@@ -5,13 +5,13 @@ const handleUserRoleRequest = async (interaction) => {
         if (!role) {
             return;
         }
-        await selfRole(role, interaction);
+        await toggleRole(role, interaction);
     } catch (error) {
         console.log(`"There was an error : ${error}"`);
     }
 
 }
-const selfRole = async (role, interaction) => {
+const toggleRole = async (role, interaction) => {
     const hasRole = interaction.member.roles.cache.has(role.id);
     if (hasRole) {
         await interaction.member.roles.remove(role);
