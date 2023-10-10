@@ -29,6 +29,10 @@ let discordChannel;
 let leaderBoard = [];
 let currentGame;
 let timeoutId;
+let questionTime;
+let answerTime;
+let answerSpeed;
+let answerPoints;
 let embedData = {
     question: {
         embed: undefined,
@@ -67,8 +71,21 @@ const postReady = async (interaction) => {
         if (interaction) {
             gameLocation = `<#${interaction.channelId}>`;
         }
-        isFirstReply ? interaction.reply(`Get ready for the first round! There are ${numberOfRounds} rounds in this game! `) :
-            discordChannel.send(`Get ready for next round in 5 seconds! There are ${numberOfRounds} rounds remaining!`);
+        if(isFirstReply){
+            if(numberOfRounds > 1)
+                interaction.reply(`Get ready for the first round! There are ${numberOfRounds} rounds in this game! `);
+            else
+                interaction.reply(`Get ready! There is only ${numberOfRounds} round in this game!`);
+
+        }
+        else{
+            if(numberOfRounds > 1)
+                discordChannel.send(`Get ready for next round in 5 seconds! There are ${numberOfRounds} rounds remaining!`);
+            else
+                discordChannel.send(`Get ready for the final round in 5 seconds!`);
+        }
+//        isFirstReply ? interaction.reply(`Get ready for the first round! There are ${numberOfRounds} rounds in this game! `) :
+//            discordChannel.send(`Get ready for next round in 5 seconds! There are ${numberOfRounds} rounds remaining!`);
         isFirstReply = false;
         await playRound();
         timeoutId = setTimeout(async () => {
@@ -216,7 +233,11 @@ const typeMessageAndSetAnswer = async (message, answer) => {
                 embeds: [embedData.question.embed.setTimestamp(new Date()).toJSON()],
                 files: [embedData.question.attachment]
             }) :
-            discordChannel.send(`${message}`);
+            await discordChannel.send(`${message}`);
+            questionTime = new Date();
+            if(embedData.question.embed){
+                questionTime.setSeconds(questionTime.getSeconds()+2);
+            }
 
         correctAnswer = answer;
     }, 5000)
@@ -242,25 +263,31 @@ function getRandomInteger(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-const createPlayerEntry = (author, points = 1) => {
+const createPlayerEntry = (author) => {
     const player = {
         player: author,
-        points: points
+        points: answerPoints
     }
     return player
 }
 
 const addPoint = (message) => {
     let playerOnBoard = false;
-    leaderBoard.forEach(rank => {
-        if (rank.player == message.author) {
+    leaderBoard.forEach(position => {
+        if (position.player == message.author) {
             playerOnBoard = true;
-            rank.points++;
+            position.points += answerPoints;
         }
     });
     if (!playerOnBoard) {
         leaderBoard.push(createPlayerEntry(message.author));
     }
+}
+
+const convertSpeedToPoints = () => {
+    let points = (answerSpeed/30)*100;
+    points = Math.floor(points);
+    answerPoints = 100-points
 }
 
 const showAndResetLeaderboard = (message) => {
@@ -285,6 +312,13 @@ const showAndResetLeaderboard = (message) => {
 
     if (leaderBoard[2]) {
         winnerString = winnerString.concat(`:third_place:<@${leaderBoard[2].player.id}> ${leaderBoard[2].points} points\n`)
+    }
+
+    if (leaderBoard[3]) {
+        winnerString = winnerString.concat(`4. <@${leaderBoard[3].player.id}> ${leaderBoard[3].points} points\n`)
+    }
+    if (leaderBoard[4]) {
+        winnerString = winnerString.concat(`5. <@${leaderBoard[4].player.id}> ${leaderBoard[4].points} points\n`)
     }
 
     const resultsEmbed = {
@@ -313,9 +347,15 @@ const handleAnswerAttempt = async (message) => {
             let answerWas = correctAnswer;
             correctAnswer = null;
             clearTimeout(timeoutId);
+            answerTime = new Date();
+            answerSpeed = ((answerTime-questionTime)/1000).toFixed(2);
+            convertSpeedToPoints();
+            if(answerSpeed <= 0){
+                answerSpeed = 0.01;
+                answerPoints = 100;
+            }
             addPoint(message);
-
-            await message.reply(`Congrats ${message.author} you were first to send the correct answer of **${answerWas}**!`);
+            await message.reply(`Congrats ${message.author} you were first to send the correct answer of **${answerWas}**! In ${answerSpeed} seconds, earning you **${answerPoints}** points!`);
 
             if (embedData.answer.embed) {
                 await message.channel.send({
