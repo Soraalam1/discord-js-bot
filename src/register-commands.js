@@ -197,9 +197,9 @@ const updateRoleValues = (serverRoles) =>{
     });
     serverRoles.forEach(serverRole => {
         MENTIONABLE_ROLES_LIST.forEach(mentionableRole => {
-            if(mentionableRole.name === serverRole.name){
+            if(mentionableRole === serverRole.name){
                 // mentionableRole.id = serverRole.id;
-                MENTIONABLE_ROLES.set(mentionableRole.name, serverRole.id);
+                MENTIONABLE_ROLES.set(mentionableRole, serverRole.id);
             }
         });
     });

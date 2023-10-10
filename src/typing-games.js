@@ -73,17 +73,13 @@ const postReady = async (interaction) => {
             gameLocation = `<#${interaction.channelId}>`;
         }
         if(isFirstReply){
-            if(numberOfRounds > 1)
-                interaction.reply(`Get ready for the first round! There are ${numberOfRounds} rounds in this game! `);
-            else
-                interaction.reply(`Get ready! There is only ${numberOfRounds} round in this game!`);
-
+            notifyForFirstRound(interaction);
         }
         else{
             if(numberOfRounds > 1)
                 discordChannel.send(`Get ready for next round in 5 seconds! There are ${numberOfRounds} rounds remaining!`);
             else
-                discordChannel.send(`Get ready for the final round in 5 seconds!`);
+                discordChannel.send(`Get ready for the **FINAL ROUND** in 5 seconds!`);
         }
 //        isFirstReply ? interaction.reply(`Get ready for the first round! There are ${numberOfRounds} rounds in this game! `) :
 //            discordChannel.send(`Get ready for next round in 5 seconds! There are ${numberOfRounds} rounds remaining!`);
@@ -110,19 +106,19 @@ const postReady = async (interaction) => {
 }
 
 const notifyForFirstRound = (interaction) => {
-    if (currentGame === 'whosthatpokemon' || currentGame === 'pokedex'){
+    if (currentGame.commandName === 'whosthatpokemon' || currentGame.commandName === 'pokedex'){
         if(numberOfRounds > 1) {
-            interaction.reply(`Hey <@&${MENTIONABLE_ROLES.get('Bot Games')}> <@&${MENTIONABLE_ROLES.get('Pokemon Bot Games')}>, get ready for the first round! There are ${numberOfRounds} rounds in this game!`);
+            interaction.reply(`<@&${MENTIONABLE_ROLES.get('Pokemon Bot Games')}> <@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready for the first round! There are ${numberOfRounds} rounds in this game!`);
         }
         else {
-            interaction.reply(`Hey <@&${MENTIONABLE_ROLES.get('Bot Games')}> <@&${MENTIONABLE_ROLES.get('Pokemon Bot Games')}>, get ready! There is only ${numberOfRounds} round in this game!`);
+            interaction.reply(`<@&${MENTIONABLE_ROLES.get('Pokemon Bot Games')}> <@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready! There is only ${numberOfRounds} round in this game!`);
         }
     } else {
         if(numberOfRounds > 1) {
-            interaction.reply(`Hey <@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready for the first round! There are ${numberOfRounds} rounds in this game!`);
+            interaction.reply(`<@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready for the first round! There are ${numberOfRounds} rounds in this game!`);
         }
         else {
-            interaction.reply(`Hey <@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready! There is only ${numberOfRounds} round in this game!`);
+            interaction.reply(`<@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready! There is only ${numberOfRounds} round in this game!`);
         }
     }
 
