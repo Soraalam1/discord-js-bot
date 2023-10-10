@@ -1,6 +1,7 @@
 const axios = require('axios');
 const {EmbedBuilder, AttachmentBuilder} = require("discord.js");
 const {createPokemonImage} = require("./image-processor");
+const {MENTIONABLE_ROLES} = require("./register-commands");
 
 const GAME_LIST = [
     {
@@ -108,6 +109,25 @@ const postReady = async (interaction) => {
     }
 }
 
+const notifyForFirstRound = (interaction) => {
+    if (currentGame === 'whosthatpokemon' || currentGame === 'pokedex'){
+        if(numberOfRounds > 1) {
+            interaction.reply(`Hey <@&${MENTIONABLE_ROLES.get('Bot Games')}> <@&${MENTIONABLE_ROLES.get('Pokemon Bot Games')}>, get ready for the first round! There are ${numberOfRounds} rounds in this game!`);
+        }
+        else {
+            interaction.reply(`Hey <@&${MENTIONABLE_ROLES.get('Bot Games')}> <@&${MENTIONABLE_ROLES.get('Pokemon Bot Games')}>, get ready! There is only ${numberOfRounds} round in this game!`);
+        }
+    } else {
+        if(numberOfRounds > 1) {
+            interaction.reply(`Hey <@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready for the first round! There are ${numberOfRounds} rounds in this game!`);
+        }
+        else {
+            interaction.reply(`Hey <@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready! There is only ${numberOfRounds} round in this game!`);
+        }
+    }
+
+}
+
 const playRound = async () => {
     switch (currentGame.commandName) {
         case 'wordrace':
@@ -157,6 +177,12 @@ const postMysteryPokemon = async () => {
     await axios.get(`${currentGame.apiUri}/${randomPokemonNumber}`).then(async response => {
         console.log(response.data[0].name)
         let pendingAnswer = removeUnnecessaryInfo(response.data[0].name);
+
+        // Pokedex API has Rhydon's name wrong, hardcode fix
+        if (randomPokemonNumber === 112) {
+            pendingAnswer = 'Rhydon';
+        }
+
         await buildPokemonEmbed(pendingAnswer, response.data[0].description, response.data[0].sprite, true);
         await typeMessageAndSetAnswer(null, pendingAnswer);
     }).catch(error => {

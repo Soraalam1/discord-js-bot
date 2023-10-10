@@ -1,4 +1,5 @@
 const {twitterScraper} = require("./twitter");
+const axios = require('axios');
 
 const checkMessageAndVx = async (message) => {
     if (message.content.includes("vxtwitter.com/") || message.content.includes("fxtwitter.com/") || message.content.includes("sxtwitter.com/") || message.content.includes("vxtiktok.com/")) {
@@ -13,10 +14,8 @@ const checkMessageAndVx = async (message) => {
 
     let URL;
 
-    if (message.content.includes("twitter.com/")) {
-        return;
-        //TODO: fix twitter AGAIN
-        //URL = await vxTwitter(message);
+    if (message.content.includes("twitter.com/") || message.content.includes("://x.com/") || message.content.includes("://www.x.com/")) {
+        URL = await vxTwitter(message);
     }
 
     if (message.content.includes("tiktok.com/")) {
@@ -67,6 +66,7 @@ const vxTwitter = async (message) => {
     let tweetURL;
 
     let fixedMessage = message.cleanContent.replace("twitter.com/", "vxtwitter.com/");
+    fixedMessage = fixedMessage.replace("x.com/", "vxtwitter.com/");
 
     try {
         tweetURL = fixedMessage.match(/(https?:\/\/(.+?\.)?vxtwitter\.com(\/[A-Za-z0-9\-\._~:\/\?#\[\]@!$&'\(\)\*\+,;\=]*)?)/)[1];
@@ -94,14 +94,26 @@ const vxTwitter = async (message) => {
 const scanTweetForVideo = async (tweetID) => {
 
     let targetTweet;
+    let video;
 
     try {
-        targetTweet = await twitterScraper.getTweet(tweetID);
+        targetTweet = await axios.get(`https://api.vxtwitter.com/Twitter/status/${tweetID}`);
     } catch (error) {
-        console.log('Could not scrape tweet with twitterScraper due to error: \n', error);
+        console.log('Could not get tweet information from VX Twitter API: \n', error);
     }
 
-    return targetTweet.videos.length > 0 || targetTweet?.quotedStatus?.videos.length > 0;
+    for (let media of targetTweet.data.media_extended) {
+        console.log(media)
+        if (media.type === 'video' || media.type === 'gif') {
+            video = true;
+            break;
+        }
+        else {
+            console.log('video not found')
+        }
+    }
+
+    return video;
 }
 
 
