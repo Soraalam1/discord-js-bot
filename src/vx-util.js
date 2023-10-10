@@ -104,7 +104,8 @@ const scanTweetForVideo = async (tweetID) => {
 
     for (let media of targetTweet.data.media_extended) {
         console.log(media)
-        if (media.type === 'video' || media.type === 'gif') {
+        if (media.type === 'video' || media.type === 'gif' || media.type === 'image') {
+            // TODO: have it VX images for now, maybe remove it later?
             video = true;
             break;
         }
