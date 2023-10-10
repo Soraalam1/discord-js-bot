@@ -30,7 +30,37 @@ const ASSIGNABLE_ROLES = [
         name: 'D&D',
         value: null    
     },
+    {
+        name: 'Street Fighters',
+        value: null
+    },
+    {
+        name: 'Iron Fists',
+        value: null
+    },
+    {
+        name: 'In-Births',
+        value: null
+    },
+    {
+        name: 'Gears',
+        value: null
+    },
+    {
+        name: 'Bot Games',
+        value: null
+    },
+    {
+        name: 'Pokemon Bot Games',
+        value: null
+    },
 ]
+
+const MENTIONABLE_ROLES_LIST = [
+   'Bot Games', 'Pokemon Bot Games', 'Stream Alerts'
+]
+
+let MENTIONABLE_ROLES = new Map();
 
 const commands = [
     {
@@ -165,7 +195,15 @@ const updateRoleValues = (serverRoles) =>{
             }
         });
     });
-    console.log(ASSIGNABLE_ROLES);
+    serverRoles.forEach(serverRole => {
+        MENTIONABLE_ROLES_LIST.forEach(mentionableRole => {
+            if(mentionableRole === serverRole.name){
+                // mentionableRole.id = serverRole.id;
+                MENTIONABLE_ROLES.set(mentionableRole, serverRole.id);
+            }
+        });
+    });
+    console.log(ASSIGNABLE_ROLES, MENTIONABLE_ROLES);
 }
 
-module.exports = { registerCommands };
+module.exports = { registerCommands, MENTIONABLE_ROLES };
