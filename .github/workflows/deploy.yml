@@ -27,5 +27,4 @@ jobs:
           npm ci &&
           pm2 stop all &&
           pm2 delete all &&
-          DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }} DISCORD_GUILD_ID=${{ secrets.GUILD_ID }} DISCORD_CLIENT_ID=${{ secrets.GUILD_ID }} pm2 start src/index.js --name Tsureimu &&
-          pm2 logs Tsureimu
+          DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }} DISCORD_GUILD_ID=${{ secrets.GUILD_ID }} DISCORD_CLIENT_ID=${{ secrets.GUILD_ID }} pm2 start src/index.js --name Tsureimu
