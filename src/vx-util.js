@@ -93,6 +93,9 @@ const vxTwitter = async (message) => {
 
 const scanTweetForVideo = async (tweetID) => {
 
+    return true;
+    //TODO: Remove images and text maybe when embeds are ok again?
+
     let targetTweet;
     let video;
 
