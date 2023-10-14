@@ -1,6 +1,67 @@
 require('dotenv').config();
 const { REST, Routes, ApplicationCommandOptionType} = require('discord.js');
 
+const ASSIGNABLE_ROLES = [
+    {
+        name: 'Straw Hats',
+        value: null    
+    },
+    {
+        name: 'Group Gamer',
+        value: null    
+    },
+    {
+        name: 'Stream Alerts',
+        value: null    
+    },
+    {
+        name: 'Watcher',
+        value: null    
+    },
+    {
+        name: 'Rando Gamer',
+        value: null
+    },
+    {
+        name: 'Smashers',
+        value: null
+    },
+    {
+        name: 'D&D',
+        value: null    
+    },
+    {
+        name: 'Street Fighters',
+        value: null
+    },
+    {
+        name: 'Iron Fists',
+        value: null
+    },
+    {
+        name: 'In-Births',
+        value: null
+    },
+    {
+        name: 'Gears',
+        value: null
+    },
+    {
+        name: 'Bot Games',
+        value: null
+    },
+    {
+        name: 'Pokemon Bot Games',
+        value: null
+    },
+]
+
+const MENTIONABLE_ROLES_LIST = [
+   'Bot Games', 'Pokemon Bot Games', 'Stream Alerts'
+]
+
+let MENTIONABLE_ROLES = new Map();
+
 const commands = [
     {
         name: 'wordrace',
@@ -94,15 +155,28 @@ const commands = [
                 max_value: 12,
             },
         ]
+    },
+    {
+        name: 'roleselect',
+        description: 'Assign yourself a role within the server!',
+        options: [
+            {
+                name: 'role',
+                description: 'The role you would like to add or remove',
+                type: ApplicationCommandOptionType.String,
+                required: true,
+                choices: ASSIGNABLE_ROLES,
+            }
+        ]
     }
 ];
 
-const rest = new REST({version:'10'}).setToken(process.env.BOT_TOKEN);
+const rest = new REST({version:'10'}).setToken(process.env.DISCORD_BOT_TOKEN);
 
-const registerCommands = async () => {
+const registerCommands = async (client) => {
     try {
         console.log('Registering slash commands...');
-
+        updateRoleValues(client.guilds.cache.get(process.env.DISCORD_GUILD_ID).roles.cache);
         await rest.put(
             Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID, process.env.DISCORD_GUILD_ID),
             { body: commands }
@@ -113,4 +187,23 @@ const registerCommands = async () => {
     }
 };
 
-module.exports = { registerCommands };
+const updateRoleValues = (serverRoles) =>{
+    serverRoles.forEach(serverRole => {
+        ASSIGNABLE_ROLES.forEach(assignableRole => {
+            if(assignableRole.name === serverRole.name){
+                assignableRole.value = serverRole.id;
+            }
+        });
+    });
+    serverRoles.forEach(serverRole => {
+        MENTIONABLE_ROLES_LIST.forEach(mentionableRole => {
+            if(mentionableRole === serverRole.name){
+                // mentionableRole.id = serverRole.id;
+                MENTIONABLE_ROLES.set(mentionableRole, serverRole.id);
+            }
+        });
+    });
+    console.log(ASSIGNABLE_ROLES, MENTIONABLE_ROLES);
+}
+
+module.exports = { registerCommands, MENTIONABLE_ROLES };
