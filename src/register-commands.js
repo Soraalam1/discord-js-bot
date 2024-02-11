@@ -1,22 +1,22 @@
 require('dotenv').config();
-const { REST, Routes, ApplicationCommandOptionType} = require('discord.js');
+const {REST, Routes, ApplicationCommandOptionType} = require('discord.js');
 
 const ASSIGNABLE_ROLES = [
     {
         name: 'Straw Hats',
-        value: null    
+        value: null
     },
     {
         name: 'Group Gamer',
-        value: null    
+        value: null
     },
     {
         name: 'Stream Alerts',
-        value: null    
+        value: null
     },
     {
         name: 'Watcher',
-        value: null    
+        value: null
     },
     {
         name: 'Rando Gamer',
@@ -28,7 +28,7 @@ const ASSIGNABLE_ROLES = [
     },
     {
         name: 'D&D',
-        value: null    
+        value: null
     },
     {
         name: 'Street Fighters',
@@ -54,10 +54,14 @@ const ASSIGNABLE_ROLES = [
         name: 'Pokemon Bot Games',
         value: null
     },
+    {
+        name: 'JRPG Enjoyer',
+        value: null
+    },
 ]
 
 const MENTIONABLE_ROLES_LIST = [
-   'Bot Games', 'Pokemon Bot Games', 'Stream Alerts'
+    'Bot Games', 'Pokemon Bot Games', 'Stream Alerts'
 ]
 
 let MENTIONABLE_ROLES = new Map();
@@ -99,32 +103,32 @@ const commands = [
                 type: ApplicationCommandOptionType.String,
                 required: false,
                 choices:
-                [
-                    {
-                        name: 'PST/PDT',
-                        value: 'America/Los_Angeles'
-                    },
-                    {
-                        name: 'MST/MDT',
-                        value: 'America/Denver'
-                    },
-                    {
-                        name: 'CST/CDT',
-                        value: 'America/Chicago'
-                    },
-                    {
-                        name: 'EST/EDT',
-                        value: 'America/New_York'
-                    },
-                    {
-                        name: 'EEST',
-                        value: 'Asia/Beirut'
-                    },
-                    {
-                        name: 'BST/GMT',
-                        value: 'Europe/London'
-                    }
-                ],
+                    [
+                        {
+                            name: 'PST/PDT',
+                            value: 'America/Los_Angeles'
+                        },
+                        {
+                            name: 'MST/MDT',
+                            value: 'America/Denver'
+                        },
+                        {
+                            name: 'CST/CDT',
+                            value: 'America/Chicago'
+                        },
+                        {
+                            name: 'EST/EDT',
+                            value: 'America/New_York'
+                        },
+                        {
+                            name: 'EEST',
+                            value: 'Asia/Beirut'
+                        },
+                        {
+                            name: 'BST/GMT',
+                            value: 'Europe/London'
+                        }
+                    ],
             },
         ]
     },
@@ -171,7 +175,7 @@ const commands = [
     }
 ];
 
-const rest = new REST({version:'10'}).setToken(process.env.DISCORD_BOT_TOKEN);
+const rest = new REST({version: '10'}).setToken(process.env.DISCORD_BOT_TOKEN);
 
 const registerCommands = async (client) => {
     try {
@@ -179,7 +183,7 @@ const registerCommands = async (client) => {
         updateRoleValues(client.guilds.cache.get(process.env.DISCORD_GUILD_ID).roles.cache);
         await rest.put(
             Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID, process.env.DISCORD_GUILD_ID),
-            { body: commands }
+            {body: commands}
         )
         console.log('Slash commands were registered successfully!');
     } catch (error) {
@@ -187,17 +191,17 @@ const registerCommands = async (client) => {
     }
 };
 
-const updateRoleValues = (serverRoles) =>{
+const updateRoleValues = (serverRoles) => {
     serverRoles.forEach(serverRole => {
         ASSIGNABLE_ROLES.forEach(assignableRole => {
-            if(assignableRole.name === serverRole.name){
+            if (assignableRole.name === serverRole.name) {
                 assignableRole.value = serverRole.id;
             }
         });
     });
     serverRoles.forEach(serverRole => {
         MENTIONABLE_ROLES_LIST.forEach(mentionableRole => {
-            if(mentionableRole === serverRole.name){
+            if (mentionableRole === serverRole.name) {
                 // mentionableRole.id = serverRole.id;
                 MENTIONABLE_ROLES.set(mentionableRole, serverRole.id);
             }
@@ -206,4 +210,4 @@ const updateRoleValues = (serverRoles) =>{
     console.log(ASSIGNABLE_ROLES, MENTIONABLE_ROLES);
 }
 
-module.exports = { registerCommands, MENTIONABLE_ROLES };
+module.exports = {registerCommands, MENTIONABLE_ROLES};
