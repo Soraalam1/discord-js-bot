@@ -1,57 +1,131 @@
 const {twitterScraper} = require("./twitter");
 const axios = require('axios');
 
-const checkMessageAndVx = async (message) => {
-    if (message.content.includes("vxtwitter.com/") || message.content.includes("fxtwitter.com/") || message.content.includes("sxtwitter.com/") || message.content.includes("vxtiktok.com/")) {
-        console.log(`${message.author.username} used vx on their link manually in ${message.channel.name}!`)
-        return;
+const checkMessageAndVx = async (message, deleted = false) => {
+    if (deleted == false) {
+        if (message.content.includes("vxtwitter.com/") || message.content.includes("fxtwitter.com/") || message.content.includes("sxtwitter.com/") || message.content.includes("vxtiktok.com/")) {
+            console.log(`${message.author.username} used vx on their link manually in ${message.channel.name}!`)
+            return;
+        }
+
+        if (message.content.includes("ddinstagram.com/")) {
+            console.log(`${message.author.username} used dd on their Instagram link manually in ${message.channel.name}!`)
+            return;
+        }
+
+        let URL;
+
+        if (message.content.includes("twitter.com/") || message.content.includes("://x.com/") || message.content.includes("://www.x.com/")) {
+            URL = await vxTwitter(message);
+        }
+
+        if (message.content.includes("tiktok.com/")) {
+            URL = vxTikTok(message);
+        }
+
+        if (message.content.includes("instagram.com/")) {
+            URL = instaFix(message);
+        }
+
+        if (!URL) {
+            return;
+        }
+
+        if (isSpoiler(message.cleanContent)) {
+            URL = `||${URL}||`;
+        }
+
+        try {
+            await message.suppressEmbeds(true);
+        } catch (error) {
+            console.error(`Could not suppress embed for original message`, message.cleanContent, error);
+        }
+
+        const discordProfile = await createDiscordProfileFromMessage(message, URL);
+
+        try {
+            await postWithWebhook(message, URL, discordProfile);
+        } catch (error) {
+            console.error(`Unable to post new link with webhook`, message.cleanContent);
+        }
+
+        // second suppression to see if it improves missed embeds
+        setTimeout(async () => {
+            await message.suppressEmbeds();
+        }, 6000)
     }
+    else {
+        const twitterMatch = message.content.match(/(?:twitter\.com|x\.com)\/([^\s]+)/);
+        const instagramMatch = message.content.match(/(?:instagram\.com)\/([^\s]+)/);
+        const tiktokMatch = message.content.match(/(?:tiktok\.com)\/([^\s]+)/);
 
-    if (message.content.includes("ddinstagram.com/")) {
-        console.log(`${message.author.username} used dd on their Instagram link manually in ${message.channel.name}!`)
-        return;
+        if (twitterMatch) {
+            const commonPart = twitterMatch[1];
+
+            // Fetches messages from the channel
+            const fetchedMessages = await message.channel.messages.fetch({ limit: 100 });
+
+            const vxMessage = fetchedMessages.find(msg =>
+                (msg.content.includes('vxtwitter.com/') || msg.content.includes('sxtwitter.com') || msg.content.includes('fxtwitter.com')) &&
+                msg.content.includes(commonPart) &&
+                msg.author.bot
+            );
+
+            if (vxMessage) {
+                try {
+                    await vxMessage.delete();
+                    console.log(`Deleted vxtwitter link matching ${commonPart}`);
+                }
+                catch (error) {
+                    console.error(`Failed to delete vxtwitter message: ${error}`);
+                }
+            }
+        }
+        if (instagramMatch) {
+            const commonPart = instagramMatch[1];
+
+            // Fetches messages from the channel
+            const fetchedMessages = await message.channel.messages.fetch({ limit: 100 });
+
+            const vxMessage = fetchedMessages.find(msg =>
+                msg.content.includes('ddinstagram.com/') &&
+                msg.content.includes(commonPart) &&
+                msg.author.bot
+            );
+
+            if (vxMessage) {
+                try {
+                    await vxMessage.delete();
+                    console.log(`Deleted ddinstagram link matching ${commonPart}`);
+                }
+                catch (error) {
+                    console.error(`Failed to delete ddinstagram message: ${error}`);
+                }
+            }
+        }
+        if (tiktokMatch) {
+            const commonPart = tiktokMatch[1];
+
+            // Fetches messages from the channel
+            const fetchedMessages = await message.channel.messages.fetch({ limit: 100 });
+
+            const vxMessage = fetchedMessages.find(msg =>
+                msg.content.includes('vxtiktok.com/') &&
+                msg.content.includes(commonPart) &&
+                msg.author.bot
+            );
+
+            if (vxMessage) {
+                try {
+                    await vxMessage.delete();
+                    console.log(`Deleted vxtiktok link matching ${commonPart}`);
+                }
+                catch (error) {
+                    console.error(`Failed to delete vxtiktok message: ${error}`);
+                }
+            }
+        }
     }
-
-    let URL;
-
-    if (message.content.includes("twitter.com/") || message.content.includes("://x.com/") || message.content.includes("://www.x.com/")) {
-        URL = await vxTwitter(message);
-    }
-
-    if (message.content.includes("tiktok.com/")) {
-        URL = vxTikTok(message);
-    }
-
-    if (message.content.includes("instagram.com/")) {
-        URL = instaFix(message);
-    }
-
-    if (!URL) {
-        return;
-    }
-
-    if (isSpoiler(message.cleanContent)) {
-        URL = `||${URL}||`;
-    }
-
-    try {
-        await message.suppressEmbeds(true);
-    } catch (error) {
-        console.error(`Could not suppress embed for original message`, message.cleanContent, error);
-    }
-
-    const discordProfile = await createDiscordProfileFromMessage(message, URL);
-
-    try {
-        await postWithWebhook(message, URL, discordProfile);
-    } catch (error) {
-        console.error(`Unable to post new link with webhook`, message.cleanContent);
-    }
-
-    // second suppression to see if it improves missed embeds
-    setTimeout(async () => {
-        await message.suppressEmbeds();
-    }, 6000)
 }
 
 const removeParams = (message) => {

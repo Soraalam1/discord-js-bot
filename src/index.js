@@ -17,7 +17,7 @@ const client = new DiscordClient({
     ]
 });
 
-client.login(`${process.env.DISCORD_BOT_TOKEN}`).catch(error => console.log(error));
+client.login(process.env.DISCORD_BOT_TOKEN).catch(error => console.log(error));
 
 client.on("ready", async (client) => {
     await registerCommands(client);
@@ -41,3 +41,11 @@ client.on("messageCreate",  async (message) => {
     await handleAnswerAttempt(message);
 
 });
+
+client.on("messageDelete", async (message) => {
+    if (message.author.bot) {
+        return;
+    }
+
+    await checkMessageAndVx(message, deleted = true);
+})
