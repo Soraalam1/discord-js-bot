@@ -37,12 +37,9 @@ client.on("messageCreate",  async (message) => {
         return;
     }
 
-    console.log("Message content: ", message);
-
     handleReminder(message);
     await checkMessageAndVx(message);
     await handleAnswerAttempt(message);
-
 });
 
 client.on("messageDelete", async (message) => {

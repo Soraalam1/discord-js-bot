@@ -25,6 +25,8 @@ const checkMessageAndVx = async (message, deleted = false) => {
             if (twitterMatch) {
                 const commonPart = twitterMatch[1];
                 urlMap.set(message.id, commonPart);
+
+                checkMapSize();
             }
         }
 
@@ -36,17 +38,21 @@ const checkMessageAndVx = async (message, deleted = false) => {
             if (tiktokMatch) {
                 const commonPart = tiktokMatch[1];
                 urlMap.set(message.id, commonPart);
+
+                checkMapSize();
             }
         }
 
         if (message.content.includes("instagram.com/")) {
             URL = instaFix(message);
 
-            const instagramMatch = message.content.match(/(?:instagram\.com)\/([^\s]+)/);
+            const instagramMatch = message.content.match(/(?:instagram\.com)\/([^\s?]+)/);
 
             if (instagramMatch) {
                 const commonPart = instagramMatch[1];
                 urlMap.set(message.id, commonPart);
+
+                checkMapSize();
             }
         }
 
@@ -74,7 +80,20 @@ const checkMessageAndVx = async (message, deleted = false) => {
 
         // second suppression to see if it improves missed embeds
         setTimeout(async () => {
-            await message.suppressEmbeds();
+            try {
+                // Attempt to fetch the message in case it was deleted
+                const fetchedMessage = await message.channel.messages.fetch(message.id, { cache: true }).catch(() => null);
+
+                if (!fetchedMessage) {
+                    console.log("Message no longer exists, cannot suppress embed.");
+                    return;  // Exit if the message doesn't exist
+                }
+
+                await fetchedMessage.suppressEmbeds();
+                console.log("Successfully suppressed embed.");
+            } catch (error) {
+                console.error("Error while suppressing embed:", error);
+            }
         }, 6000)
     }
     else {
@@ -293,6 +312,13 @@ const isSpoiler = (string) => {
         }
     }
     return false;
+}
+
+const checkMapSize = () => {
+    if (urlMap.size > 10) {
+        const oldestKey = urlMap.keys().next().value;
+        urlMap.delete(oldestKey);
+    }
 }
 
 module.exports = {
