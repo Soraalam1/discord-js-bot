@@ -1,6 +1,8 @@
 const {twitterScraper} = require("./twitter");
 const axios = require('axios');
 
+const urlMap = new Map();
+
 const checkMessageAndVx = async (message, deleted = false) => {
     if (deleted == false) {
         if (message.content.includes("vxtwitter.com/") || message.content.includes("fxtwitter.com/") || message.content.includes("sxtwitter.com/") || message.content.includes("vxtiktok.com/")) {
@@ -17,14 +19,35 @@ const checkMessageAndVx = async (message, deleted = false) => {
 
         if (message.content.includes("twitter.com/") || message.content.includes("://x.com/") || message.content.includes("://www.x.com/")) {
             URL = await vxTwitter(message);
+
+            const twitterMatch = message.content.match(/(?:twitter\.com|x\.com)\/([^\s?]+)/);
+
+            if (twitterMatch) {
+                const commonPart = twitterMatch[1];
+                urlMap.set(message.id, commonPart);
+            }
         }
 
         if (message.content.includes("tiktok.com/")) {
             URL = vxTikTok(message);
+
+            const tiktokMatch = message.content.match(/(?:tiktok\.com)\/([^\s]+)/);
+
+            if (tiktokMatch) {
+                const commonPart = tiktokMatch[1];
+                urlMap.set(message.id, commonPart);
+            }
         }
 
         if (message.content.includes("instagram.com/")) {
             URL = instaFix(message);
+
+            const instagramMatch = message.content.match(/(?:instagram\.com)\/([^\s]+)/);
+
+            if (instagramMatch) {
+                const commonPart = instagramMatch[1];
+                urlMap.set(message.id, commonPart);
+            }
         }
 
         if (!URL) {
@@ -55,76 +78,50 @@ const checkMessageAndVx = async (message, deleted = false) => {
         }, 6000)
     }
     else {
-        const twitterMatch = message.content.match(/(?:twitter\.com|x\.com)\/([^\s]+)/);
-        const instagramMatch = message.content.match(/(?:instagram\.com)\/([^\s]+)/);
-        const tiktokMatch = message.content.match(/(?:tiktok\.com)\/([^\s]+)/);
+        // Retrieve the unique portion of the URL using the ID of the deleted message, which is the only part of the message we are guaranteed access to upon deletion
+        const commonPart = urlMap.get(message.id);
 
-        if (twitterMatch) {
-            const commonPart = twitterMatch[1];
+        if (!commonPart) {
+            console.log("No matching URL found for deleted message.");
+            return;
+        }
 
-            // Fetches messages from the channel
-            const fetchedMessages = await message.channel.messages.fetch({ limit: 100 });
+        try {
+            // Fetches recent messages in channel since there is no way to directly access the time/date of the sent message and go to that point in channel history
+            console.log("Attempting to fetch messages in channel...")
+            const fetchedMessages = await message.channel.messages.fetch({ limit: 10 });
+            console.log("Messages successfully fetched.");
 
+            // Finds bot's vxtwitter message corresponding to the deleted message
             const vxMessage = fetchedMessages.find(msg =>
-                (msg.content.includes('vxtwitter.com/') || msg.content.includes('sxtwitter.com') || msg.content.includes('fxtwitter.com')) &&
-                msg.content.includes(commonPart) &&
-                msg.author.bot
+                {
+                // Extract the part after vx
+                const vxMatch = msg.content.match(/(?:vxtwitter\.com|vxtiktok\.com|ddinstagram\.com)\/([^\s]+)/);
+
+                // Check if the bot message matches the common part extracted from the original message
+                return vxMatch && vxMatch[1] === commonPart && msg.author.bot;
+                }
             );
 
             if (vxMessage) {
                 try {
                     await vxMessage.delete();
-                    console.log(`Deleted vxtwitter link matching ${commonPart}`);
+                    console.log(`Deleted vx link matching ${commonPart}`);
                 }
                 catch (error) {
-                    console.error(`Failed to delete vxtwitter message: ${error}`);
+                    console.error(`Failed to delete vx message: ${error}`);
                 }
             }
-        }
-        if (instagramMatch) {
-            const commonPart = instagramMatch[1];
-
-            // Fetches messages from the channel
-            const fetchedMessages = await message.channel.messages.fetch({ limit: 100 });
-
-            const vxMessage = fetchedMessages.find(msg =>
-                msg.content.includes('ddinstagram.com/') &&
-                msg.content.includes(commonPart) &&
-                msg.author.bot
-            );
-
-            if (vxMessage) {
-                try {
-                    await vxMessage.delete();
-                    console.log(`Deleted ddinstagram link matching ${commonPart}`);
-                }
-                catch (error) {
-                    console.error(`Failed to delete ddinstagram message: ${error}`);
-                }
+        } catch (error) {
+            if (error.code === 10008) {
+                console.error("Message not found or no longer exists.")
+            } else {
+                console.error("An unexpected error occurred: ", error);
             }
         }
-        if (tiktokMatch) {
-            const commonPart = tiktokMatch[1];
 
-            // Fetches messages from the channel
-            const fetchedMessages = await message.channel.messages.fetch({ limit: 100 });
-
-            const vxMessage = fetchedMessages.find(msg =>
-                msg.content.includes('vxtiktok.com/') &&
-                msg.content.includes(commonPart) &&
-                msg.author.bot
-            );
-
-            if (vxMessage) {
-                try {
-                    await vxMessage.delete();
-                    console.log(`Deleted vxtiktok link matching ${commonPart}`);
-                }
-                catch (error) {
-                    console.error(`Failed to delete vxtiktok message: ${error}`);
-                }
-            }
-        }
+        // Removes stored URL portion from map once it is handled
+        urlMap.delete(message.id);
     }
 }
 
