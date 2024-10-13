@@ -41,13 +41,13 @@ const checkMessageAndVx = async (message) => {
         const fetchedMessage = await message.channel.messages.fetch(message.id, {cache: true}).catch(() => null);
 
         if (!fetchedMessage) {
-            console.log(`Message with link from ${message.author.username} no longer exists, cannot suppress embed.`);
+            console.log(`Message with link from ${message.author.username} in #${message.channel.name} no longer exists, cannot suppress embed.`);
             return;  // Exit if the message doesn't exist
         }
 
         await fetchedMessage.suppressEmbeds(true);
     } catch (error) {
-        console.error(`Could not suppress embed for original message`, message.cleanContent, error);
+        console.error(`Could not suppress embed for original message in #${message.channel.name}`, message.cleanContent, error);
     }
 
     const discordProfile = await createDiscordProfileFromMessage(message, URL);
@@ -65,12 +65,12 @@ const checkMessageAndVx = async (message) => {
             const fetchedMessage = await message.channel.messages.fetch(message.id, {cache: true}).catch(() => null);
 
             if (!fetchedMessage) {
-                console.log(`Message with link from ${message.author.username} no longer exists, cannot suppress embed.`);
+                console.log(`Message with link from ${message.author.username} in #${message.channel.name} no longer exists, cannot suppress embed.`);
                 return;  // Exit if the message doesn't exist
             }
 
             await fetchedMessage.suppressEmbeds();
-            console.log(`Successfully suppressed embed for message with link from ${message.author.username}.`);
+            console.log(`Successfully suppressed embed for message with link from ${message.author.username} in #${message.channel.name}.`);
         } catch (error) {
             console.error("Error while suppressing embed:", error);
         }
@@ -234,7 +234,7 @@ const isSpoiler = (string) => {
 
 const deleteVxLink = async (message) => {
     if (messageIdToBotMessageIdMap.has(message.id)) {
-        console.log(`Message with link from ${message.author.username} has been deleted, deleting bot message.`)
+        console.log(`Message with link from ${message.author.username} in #${message.channel.name} has been deleted, deleting bot message.`)
         const botMessageId = messageIdToBotMessageIdMap.get(message.id);
         try {
             // Fetch bot's associated message in map
@@ -242,9 +242,9 @@ const deleteVxLink = async (message) => {
 
             await fetchedBotMessage.delete();
             messageIdToBotMessageIdMap.delete(message.id);
-            console.log(`Bot message with ID ${botMessageId} has been deleted.`);
+            console.log(`Bot message with ID ${botMessageId} in #${message.channel.name} has been deleted.`);
         } catch (error) {
-            console.error(`Could not delete message with ID ${botMessageId}: `, error);
+            console.error(`Could not delete message with ID ${botMessageId} in #${message.channel.name}: `, error);
         }
     }
 }
