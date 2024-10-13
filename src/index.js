@@ -4,7 +4,7 @@ const {checkMessageAndVx, deleteVxLink} = require("./vx-util");
 const {handleReminder} = require("./reminder");
 const {handleGameStart, handleAnswerAttempt} = require("./typing-games");
 const {handleUserRoleRequest} = require("./role-assignment");
-const { registerCommands } = require('./register-commands');
+const {registerCommands} = require('./register-commands');
 
 
 const client = new DiscordClient({
@@ -25,14 +25,14 @@ client.on("ready", async (client) => {
     console.log(`${client.user.username} is ready!`);
 });
 
-client.on('interactionCreate', async (interaction) =>{
-    if(!interaction.isChatInputCommand()) return
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isChatInputCommand()) return
     handleGameStart(interaction);
     handleUserRoleRequest(interaction);
     handleReminder(interaction);
 });
 
-client.on("messageCreate",  async (message) => {
+client.on("messageCreate", async (message) => {
     if (message.author.bot) {
         return;
     }
@@ -43,20 +43,5 @@ client.on("messageCreate",  async (message) => {
 });
 
 client.on("messageDelete", async (message) => {
-    console.log("Message deleted. Checking for vx links to delete.");
-    //I don't think the code below actually does anything tbh but if the bot starts crashing for vx-delete, try uncommenting this to see if it fixes anything
-    //
-    //if (message.partial) {
-    //    console.log("Partial message found.")
-    //    try {
-    //        await message.fetch();
-    //        console.log("Message fetched")
-    //    }
-    //    catch (error) {
-    //        console.error("Could not fetch partial message: ", error);
-    //        return;
-    //    }
-    //}
-
     await deleteVxLink(message);
 })
