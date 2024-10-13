@@ -1,5 +1,7 @@
 const axios = require('axios');
 
+const VX_TWITTER_API = "https://api.vxtwitter.com/Twitter/status"
+
 const messageIdToBotMessageIdMap = new Map();
 
 const checkMessageAndVx = async (message) => {
@@ -116,7 +118,7 @@ const scanTweetForMedia = async (tweetID) => {
     let targetTweet;
 
     try {
-        targetTweet = await axios.get(`https://api.vxtwitter.com/Twitter/status/${tweetID}`);
+        targetTweet = await axios.get(`${VX_TWITTER_API}/${tweetID}`);
     } catch (error) {
         console.log('Could not get tweet information from VX Twitter API: \n', error);
     }
