@@ -1,6 +1,6 @@
 const {Client: DiscordClient, IntentsBitField, Partials} = require('discord.js');
 require('dotenv').config();
-const {checkMessageAndVx} = require("./vx-util");
+const {checkMessageAndVx, deleteVxLink} = require("./vx-util");
 const {handleReminder} = require("./reminder");
 const {handleGameStart, handleAnswerAttempt} = require("./typing-games");
 const {handleUserRoleRequest} = require("./role-assignment");
@@ -43,12 +43,7 @@ client.on("messageCreate",  async (message) => {
 });
 
 client.on("messageDelete", async (message) => {
-    console.log("Function is running");
-    if (message.author.bot) {
-        console.log("Bot is author; ending function")
-        return;
-    }
-
+    console.log("Message deleted. Checking for vx links to delete.");
     //I don't think the code below actually does anything tbh but if the bot starts crashing for vx-delete, try uncommenting this to see if it fixes anything
     //
     //if (message.partial) {
@@ -63,5 +58,5 @@ client.on("messageDelete", async (message) => {
     //    }
     //}
 
-    await checkMessageAndVx(message, deleted = true);
+    await deleteVxLink(message);
 })

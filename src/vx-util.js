@@ -3,145 +3,77 @@ const axios = require('axios');
 
 const urlMap = new Map();
 
-const checkMessageAndVx = async (message, deleted = false) => {
-    if (deleted == false) {
-        if (message.content.includes("vxtwitter.com/") || message.content.includes("fxtwitter.com/") || message.content.includes("sxtwitter.com/") || message.content.includes("vxtiktok.com/")) {
-            console.log(`${message.author.username} used vx on their link manually in ${message.channel.name}!`)
-            return;
-        }
-
-        if (message.content.includes("ddinstagram.com/")) {
-            console.log(`${message.author.username} used dd on their Instagram link manually in ${message.channel.name}!`)
-            return;
-        }
-
-        let URL;
-
-        if (message.content.includes("twitter.com/") || message.content.includes("://x.com/") || message.content.includes("://www.x.com/")) {
-            URL = await vxTwitter(message);
-
-            const twitterMatch = message.content.match(/(?:twitter\.com|x\.com)\/([^\s?]+)/);
-
-            if (twitterMatch) {
-                const commonPart = twitterMatch[1];
-                urlMap.set(message.id, commonPart);
-
-                checkMapSize();
-            }
-        }
-
-        if (message.content.includes("tiktok.com/")) {
-            URL = vxTikTok(message);
-
-            const tiktokMatch = message.content.match(/(?:tiktok\.com)\/([^\s]+)/);
-
-            if (tiktokMatch) {
-                const commonPart = tiktokMatch[1];
-                urlMap.set(message.id, commonPart);
-
-                checkMapSize();
-            }
-        }
-
-        if (message.content.includes("instagram.com/")) {
-            URL = instaFix(message);
-
-            const instagramMatch = message.content.match(/(?:instagram\.com)\/([^\s?]+)/);
-
-            if (instagramMatch) {
-                const commonPart = instagramMatch[1];
-                urlMap.set(message.id, commonPart);
-
-                checkMapSize();
-            }
-        }
-
-        if (!URL) {
-            return;
-        }
-
-        if (isSpoiler(message.cleanContent)) {
-            URL = `||${URL}||`;
-        }
-
-        try {
-            await message.suppressEmbeds(true);
-        } catch (error) {
-            console.error(`Could not suppress embed for original message`, message.cleanContent, error);
-        }
-
-        const discordProfile = await createDiscordProfileFromMessage(message, URL);
-
-        try {
-            await postWithWebhook(message, URL, discordProfile);
-        } catch (error) {
-            console.error(`Unable to post new link with webhook`, message.cleanContent);
-        }
-
-        // second suppression to see if it improves missed embeds
-        setTimeout(async () => {
-            try {
-                // Attempt to fetch the message in case it was deleted
-                const fetchedMessage = await message.channel.messages.fetch(message.id, { cache: true }).catch(() => null);
-
-                if (!fetchedMessage) {
-                    console.log("Message no longer exists, cannot suppress embed.");
-                    return;  // Exit if the message doesn't exist
-                }
-
-                await fetchedMessage.suppressEmbeds();
-                console.log("Successfully suppressed embed.");
-            } catch (error) {
-                console.error("Error while suppressing embed:", error);
-            }
-        }, 6000)
+const checkMessageAndVx = async (message) => {
+    if (message.content.includes("vxtwitter.com/") || message.content.includes("fxtwitter.com/") || message.content.includes("sxtwitter.com/") || message.content.includes("vxtiktok.com/")) {
+        console.log(`${message.author.username} used vx on their link manually in ${message.channel.name}!`)
+        return;
     }
-    else {
-        // Retrieve the unique portion of the URL using the ID of the deleted message, which is the only part of the message we are guaranteed access to upon deletion
-        const commonPart = urlMap.get(message.id);
 
-        if (!commonPart) {
-            console.log("No matching URL found for deleted message.");
-            return;
-        }
-
-        try {
-            // Fetches recent messages in channel since there is no way to directly access the time/date of the sent message and go to that point in channel history
-            console.log("Attempting to fetch messages in channel...")
-            const fetchedMessages = await message.channel.messages.fetch({ limit: 10 });
-            console.log("Messages successfully fetched.");
-
-            // Finds bot's vxtwitter message corresponding to the deleted message
-            const vxMessage = fetchedMessages.find(msg =>
-                {
-                // Extract the part after vx
-                const vxMatch = msg.content.match(/(?:vxtwitter\.com|vxtiktok\.com|ddinstagram\.com)\/([^\s]+)/);
-
-                // Check if the bot message matches the common part extracted from the original message
-                return vxMatch && vxMatch[1] === commonPart && msg.author.bot;
-                }
-            );
-
-            if (vxMessage) {
-                try {
-                    await vxMessage.delete();
-                    console.log(`Deleted vx link matching ${commonPart}`);
-                }
-                catch (error) {
-                    console.error(`Failed to delete vx message: ${error}`);
-                }
-            }
-        } catch (error) {
-            if (error.code === 10008) {
-                console.error("Message not found or no longer exists.")
-            } else {
-                console.error("An unexpected error occurred: ", error);
-            }
-        }
-
-        // Removes stored URL portion from map once it is handled
-        urlMap.delete(message.id);
+    if (message.content.includes("ddinstagram.com/")) {
+        console.log(`${message.author.username} used dd on their Instagram link manually in ${message.channel.name}!`)
+        return;
     }
+
+    let URL;
+
+    if (message.content.includes("twitter.com/") || message.content.includes("://x.com/") || message.content.includes("://www.x.com/")) {
+        URL = await vxTwitter(message);
+    }
+
+    if (message.content.includes("tiktok.com/")) {
+        URL = vxTikTok(message);
+    }
+
+    if (message.content.includes("instagram.com/")) {
+        URL = instaFix(message);
+    }
+
+    if (!URL) {
+        return;
+    }
+
+    if (isSpoiler(message.cleanContent)) {
+        URL = `||${URL}||`;
+    }
+
+    try {
+        const fetchedMessage = await message.channel.messages.fetch(message.id, { cache: true }).catch(() => null);
+
+        if (!fetchedMessage) {
+            console.log("Message no longer exists, cannot suppress embed.");
+            return;  // Exit if the message doesn't exist
+        }
+
+        await fetchedMessage.suppressEmbeds(true);
+    } catch (error) {
+        console.error(`Could not suppress embed for original message`, message.cleanContent, error);
+    }
+
+    const discordProfile = await createDiscordProfileFromMessage(message, URL);
+
+    try {
+        await postWithWebhook(message, URL, discordProfile);
+    } catch (error) {
+        console.error(`Unable to post new link with webhook`, message.cleanContent);
+    }
+
+    // second suppression to see if it improves missed embeds
+    setTimeout(async () => {
+        try {
+            // Attempt to fetch the message in case it was deleted
+            const fetchedMessage = await message.channel.messages.fetch(message.id, { cache: true }).catch(() => null);
+
+            if (!fetchedMessage) {
+                console.log("Message no longer exists, cannot suppress embed.");
+                return;  // Exit if the message doesn't exist
+            }
+
+            await fetchedMessage.suppressEmbeds();
+            console.log("Successfully suppressed embed.");
+        } catch (error) {
+            console.error("Error while suppressing embed:", error);
+        }
+    }, 6000)
 }
 
 const removeParams = (message) => {
@@ -300,7 +232,9 @@ const createDiscordProfileFromMessage = async (message, URL) => {
 const postWithWebhook = async (message, URL, discordProfile) => {
     const webhook = await message.channel.createWebhook(discordProfile).catch(err => console.error(err));
 
-    await webhook.send(URL).catch(err => console.error(err));
+    const webhookMessage = await webhook.send(URL).catch(err => console.error(err));
+    urlMap.set(message.id, webhookMessage.id);
+    checkMapSize();
     await webhook.delete().catch(err => console.error(err));
 }
 
@@ -314,6 +248,26 @@ const isSpoiler = (string) => {
     return false;
 }
 
+const deleteVxLink = async (message) => {
+    if (urlMap.has(message.id)) {
+        const botMessageId = urlMap.get(message.id);
+        try {
+            // Fetch bot's associated message in map
+            const fetchedBotMessage = await message.channel.messages.fetch(botMessageId);
+
+            await fetchedBotMessage.delete();
+            console.log(`Bot message with ID ${botMessageId} has been deleted.`);
+        }
+        catch (error) {
+            console.error(`Could not delete message with ID ${botMessageId}: `, error);
+        }
+    }
+    else {
+        console.log("Deleted message is not associated with a bot message stored in the map.");
+    }
+    return;
+}
+
 const checkMapSize = () => {
     if (urlMap.size > 10) {
         const oldestKey = urlMap.keys().next().value;
@@ -322,6 +276,7 @@ const checkMapSize = () => {
 }
 
 module.exports = {
-    checkMessageAndVx
+    checkMessageAndVx,
+    deleteVxLink
 }
 
