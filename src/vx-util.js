@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const VX_TWITTER_API = "https://api.vxtwitter.com/Twitter/status"
+const VX_TWITTER_API = "https://api.vxtwitter.com/Twitter/status" //constant
 
 const messageIdToBotMessageIdMap = new Map();
 

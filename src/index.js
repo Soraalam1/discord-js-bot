@@ -15,7 +15,7 @@ const client = new DiscordClient({
         IntentsBitField.Flags.MessageContent,
         IntentsBitField.Flags.GuildPresences,
     ],
-    partials: [Partials.Message, Partials.Channel] // Enables partial messages, channels, and reactions
+    partials: [Partials.Message, Partials.Channel] // Enables partial messages, channels, and reactions..
 });
 
 client.login(process.env.DISCORD_BOT_TOKEN).catch(error => console.log(error));
