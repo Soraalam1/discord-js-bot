@@ -103,7 +103,7 @@ const vxTwitter = async (message) => {
 
     const tweetID = tweetURL.match(/(?<=\/status\/)\d+/)[0];
 
-    let mediaWasFound = await scanTweetForMedia(tweetID);
+    let mediaWasFound = await scanTweetForMediaOrQuote(tweetID);
 
     if (mediaWasFound) {
         console.log(`twitter link with media found in #${message.channel.name}, reposting with vx`);
@@ -114,7 +114,7 @@ const vxTwitter = async (message) => {
     return false;
 }
 
-const scanTweetForMedia = async (tweetID) => {
+const scanTweetForMediaOrQuote = async (tweetID) => {
     let targetTweet;
 
     try {
@@ -123,7 +123,7 @@ const scanTweetForMedia = async (tweetID) => {
         console.log('Could not get tweet information from VX Twitter API: \n', error);
     }
 
-    return targetTweet?.data?.hasMedia;
+    return targetTweet?.data?.hasMedia || !!targetTweet?.data?.qrt;
 }
 
 
