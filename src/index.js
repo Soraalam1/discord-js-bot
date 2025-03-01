@@ -1,6 +1,6 @@
-const {Client: DiscordClient, IntentsBitField, Partials} = require('discord.js');
+const {Client: DiscordClient, IntentsBitField} = require('discord.js');
 require('dotenv').config();
-const {checkMessageAndVx, deleteVxLink} = require("./vx-util");
+const {checkMessageAndVx} = require("./vx-util");
 const {handleReminder} = require("./reminder");
 const {handleGameStart, handleAnswerAttempt} = require("./typing-games");
 const {handleUserRoleRequest} = require("./role-assignment");
@@ -14,11 +14,10 @@ const client = new DiscordClient({
         IntentsBitField.Flags.GuildMessages,
         IntentsBitField.Flags.MessageContent,
         IntentsBitField.Flags.GuildPresences,
-    ],
-    partials: [Partials.Message, Partials.Channel] // Enables partial messages, channels, and reactions
+    ]
 });
 
-client.login(process.env.DISCORD_BOT_TOKEN).catch(error => console.log(error));
+client.login(`${process.env.DISCORD_BOT_TOKEN}`).catch(error => console.log(error));
 
 client.on("ready", async (client) => {
     await registerCommands(client);
@@ -40,8 +39,5 @@ client.on("messageCreate", async (message) => {
     handleReminder(message);
     await checkMessageAndVx(message);
     await handleAnswerAttempt(message);
-});
 
-client.on("messageDelete", async (message) => {
-    await deleteVxLink(message);
-})
+});
