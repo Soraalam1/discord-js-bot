@@ -1,5 +1,8 @@
-const {twitterScraper} = require("./twitter");
 const axios = require('axios');
+
+const VX_TWITTER_API = "https://api.vxtwitter.com/Twitter/status"
+
+const messageIdToBotMessageIdMap = new Map();
 
 const checkMessageAndVx = async (message) => {
     if (message.content.includes("vxtwitter.com/") || message.content.includes("fxtwitter.com/") || message.content.includes("sxtwitter.com/") || message.content.includes("vxtiktok.com/")) {
@@ -35,9 +38,16 @@ const checkMessageAndVx = async (message) => {
     }
 
     try {
-        await message.suppressEmbeds(true);
+        const fetchedMessage = await message.channel.messages.fetch(message.id, {cache: true}).catch(() => null);
+
+        if (!fetchedMessage) {
+            console.log(`Message with link from ${message.author.username} in #${message.channel.name} no longer exists, cannot suppress embed.`);
+            return;  // Exit if the message doesn't exist
+        }
+
+        await fetchedMessage.suppressEmbeds(true);
     } catch (error) {
-        console.error(`Could not suppress embed for original message`, message.cleanContent, error);
+        console.error(`Could not suppress embed for original message in #${message.channel.name}`, message.cleanContent, error);
     }
 
     const discordProfile = await createDiscordProfileFromMessage(message, URL);
@@ -50,7 +60,20 @@ const checkMessageAndVx = async (message) => {
 
     // second suppression to see if it improves missed embeds
     setTimeout(async () => {
-        await message.suppressEmbeds();
+        try {
+            // Attempt to fetch the message in case it was deleted
+            const fetchedMessage = await message.channel.messages.fetch(message.id, {cache: true}).catch(() => null);
+
+            if (!fetchedMessage) {
+                console.log(`Message with link from ${message.author.username} in #${message.channel.name} no longer exists, cannot suppress embed.`);
+                return;  // Exit if the message doesn't exist
+            }
+
+            await fetchedMessage.suppressEmbeds();
+            console.log(`Successfully suppressed embed for message with link from ${message.author.username} in #${message.channel.name}.`);
+        } catch (error) {
+            console.error("Error while suppressing embed:", error);
+        }
     }, 6000)
 }
 
@@ -78,12 +101,12 @@ const vxTwitter = async (message) => {
     tweetURL = removeParams(tweetURL);
 
 
-    const tweetID = tweetURL.match(/\d+$/)[0];
+    const tweetID = tweetURL.match(/(?<=\/status\/)\d+/)[0];
 
-    let videoWasFound = await scanTweetForVideo(tweetID);
+    let mediaWasFound = await scanTweetForMedia(tweetID);
 
-    if (videoWasFound) {
-        console.log(`twitter link with video found in #${message.channel.name}, reposting with vx`);
+    if (mediaWasFound) {
+        console.log(`twitter link with media found in #${message.channel.name}, reposting with vx`);
         console.log(tweetURL);
         return tweetURL;
     }
@@ -91,33 +114,16 @@ const vxTwitter = async (message) => {
     return false;
 }
 
-const scanTweetForVideo = async (tweetID) => {
-
-    return true;
-    //TODO: Remove images and text maybe when embeds are ok again?
-
+const scanTweetForMedia = async (tweetID) => {
     let targetTweet;
-    let video;
 
     try {
-        targetTweet = await axios.get(`https://api.vxtwitter.com/Twitter/status/${tweetID}`);
+        targetTweet = await axios.get(`${VX_TWITTER_API}/${tweetID}`);
     } catch (error) {
         console.log('Could not get tweet information from VX Twitter API: \n', error);
     }
 
-    for (let media of targetTweet.data.media_extended) {
-        console.log(media)
-        if (media.type === 'video' || media.type === 'gif' || media.type === 'image') {
-            // TODO: have it VX images for now, maybe remove it later?
-            video = true;
-            break;
-        }
-        else {
-            console.log('video not found')
-        }
-    }
-
-    return video;
+    return targetTweet?.data?.hasMedia;
 }
 
 
@@ -210,7 +216,9 @@ const createDiscordProfileFromMessage = async (message, URL) => {
 const postWithWebhook = async (message, URL, discordProfile) => {
     const webhook = await message.channel.createWebhook(discordProfile).catch(err => console.error(err));
 
-    await webhook.send(URL).catch(err => console.error(err));
+    const webhookMessage = await webhook.send(URL).catch(err => console.error(err));
+    messageIdToBotMessageIdMap.set(message.id, webhookMessage.id);
+    checkMapSize();
     await webhook.delete().catch(err => console.error(err));
 }
 
@@ -224,7 +232,32 @@ const isSpoiler = (string) => {
     return false;
 }
 
+const deleteVxLink = async (message) => {
+    if (messageIdToBotMessageIdMap.has(message.id)) {
+        console.log(`Message with link from ${message.author.username} in #${message.channel.name} has been deleted, deleting bot message.`)
+        const botMessageId = messageIdToBotMessageIdMap.get(message.id);
+        try {
+            // Fetch bot's associated message in map
+            const fetchedBotMessage = await message.channel.messages.fetch(botMessageId);
+
+            await fetchedBotMessage.delete();
+            messageIdToBotMessageIdMap.delete(message.id);
+            console.log(`Bot message with ID ${botMessageId} in #${message.channel.name} has been deleted.`);
+        } catch (error) {
+            console.error(`Could not delete message with ID ${botMessageId} in #${message.channel.name}: `, error);
+        }
+    }
+}
+
+const checkMapSize = () => {
+    if (messageIdToBotMessageIdMap.size > 10) {
+        const oldestKey = messageIdToBotMessageIdMap.keys().next().value;
+        messageIdToBotMessageIdMap.delete(oldestKey);
+    }
+}
+
 module.exports = {
-    checkMessageAndVx
+    checkMessageAndVx,
+    deleteVxLink
 }
 
