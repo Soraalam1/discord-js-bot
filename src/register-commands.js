@@ -144,6 +144,14 @@ const commands = [
                 min_value: 1,
                 max_value: 12,
             },
+            {
+                name: 'gen',
+                description: 'Restrict Pokemon pool to a specific gen',
+                type: ApplicationCommandOptionType.Number,
+                required: false,
+                min_value: 1,
+                max_value: 7,
+            }
         ]
     },
     {
@@ -158,6 +166,14 @@ const commands = [
                 min_value: 1,
                 max_value: 12,
             },
+            {
+                name: 'gen',
+                description: 'Restrict Pokemon pool to a specific gen',
+                type: ApplicationCommandOptionType.Number,
+                required: false,
+                min_value: 1,
+                max_value: 7,
+            }
         ]
     },
     {
