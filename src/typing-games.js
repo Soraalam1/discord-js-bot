@@ -126,7 +126,11 @@ const postReady = async (interaction) => {
 const notifyForFirstRound = (interaction) => {
     if (currentGame.commandName === 'whosthatpokemon' || currentGame.commandName === 'pokedex') {
         if (numberOfRounds > 1) {
-            interaction.reply(`<@&${MENTIONABLE_ROLES.get('Pokemon Bot Games')}> <@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready for the first round! There are ${numberOfRounds} rounds in this game!`);
+            let genInfo = '';
+            if (genRestriction) {
+                genInfo = `This game will be **Gen ${genRestriction} Pokemon** only.`
+            }
+            interaction.reply(`<@&${MENTIONABLE_ROLES.get('Pokemon Bot Games')}> <@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready for the first round! There are ${numberOfRounds} rounds in this game! ${genInfo}`);
         } else {
             interaction.reply(`<@&${MENTIONABLE_ROLES.get('Pokemon Bot Games')}> <@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready! There is only ${numberOfRounds} round in this game!`);
         }
@@ -363,6 +367,7 @@ const showAndResetLeaderboard = (message) => {
         leaderBoard = [];
         currentGame = null;
         isGameOngoing = false;
+        bonusPoints = 0;
         return;
     }
 
@@ -405,6 +410,7 @@ const showAndResetLeaderboard = (message) => {
     currentGame = null;
     isGameOngoing = false;
     genRestriction = null;
+    bonusPoints = 0;
 }
 
 const handleAnswerAttempt = async (message) => {
@@ -449,6 +455,8 @@ const cleanDataForNextRound = () => {
         }
     };
     numberOfRounds--;
+    bonusPoints = 0;
+    timeoutId = null;
 }
 
 
