@@ -177,7 +177,7 @@ const commands = [
         ]
     },
     {
-        name: 'role-select',
+        name: 'roleselect',
         description: 'Assign yourself a role within the server!',
         options: [
             {
