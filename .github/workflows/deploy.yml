@@ -24,6 +24,7 @@ jobs:
             git pull origin master &&
             npm install &&
             npm ci &&
+            pm2 start src/index.js --name Tsureimu &&
             pm2 stop all || true &&
             pm2 delete all || true &&
             DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }} DISCORD_GUILD_ID=${{ secrets.GUILD_ID }} DISCORD_CLIENT_ID=${{ secrets.CLIENT_ID }} &&
@@ -31,4 +32,4 @@ jobs:
             printenv DISCORD_GUILD_ID &&
             printenv DISCORD_CLIENT_ID &&
             node src/index.js
-#            pm2 start src/index.js --name Tsureimu
+
