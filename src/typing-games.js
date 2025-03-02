@@ -21,8 +21,19 @@ const GAME_LIST = [
     }
 ]
 
+const POKEMON_GEN_MAP = {
+    1: [1, 151],
+    2: [152, 251],
+    3: [252, 386],
+    4: [387, 493],
+    5: [494, 649],
+    6: [650, 721],
+    7: [722, 807]
+}
+
 let correctAnswer;
 let numberOfRounds = 0;
+let genRestriction = null;
 let isFirstReply = true;
 let isGameOngoing = false;
 let gameLocation;
@@ -59,6 +70,13 @@ const handleGameStart = async (interaction) => {
         }
         isFirstReply = true;
         numberOfRounds = await interaction.options.get('rounds').value;
+        if (currentGame.commandName === 'pokedex' || currentGame.commandName === 'whosthatpokemon') {
+            try {
+                genRestriction = await interaction.options.get('gen').value;
+            } catch (error) {
+                genRestriction = null;
+            }
+        }
         discordChannel = await interaction.channel;
 
 
@@ -72,11 +90,10 @@ const postReady = async (interaction) => {
         if (interaction) {
             gameLocation = `<#${interaction.channelId}>`;
         }
-        if(isFirstReply){
+        if (isFirstReply) {
             notifyForFirstRound(interaction);
-        }
-        else{
-            if(numberOfRounds > 1)
+        } else {
+            if (numberOfRounds > 1)
                 discordChannel.send(`Get ready for next round in 5 seconds! There are ${numberOfRounds} rounds remaining!`);
             else
                 discordChannel.send(`Get ready for the **FINAL ROUND** in 5 seconds!`);
@@ -106,18 +123,16 @@ const postReady = async (interaction) => {
 }
 
 const notifyForFirstRound = (interaction) => {
-    if (currentGame.commandName === 'whosthatpokemon' || currentGame.commandName === 'pokedex'){
-        if(numberOfRounds > 1) {
+    if (currentGame.commandName === 'whosthatpokemon' || currentGame.commandName === 'pokedex') {
+        if (numberOfRounds > 1) {
             interaction.reply(`<@&${MENTIONABLE_ROLES.get('Pokemon Bot Games')}> <@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready for the first round! There are ${numberOfRounds} rounds in this game!`);
-        }
-        else {
+        } else {
             interaction.reply(`<@&${MENTIONABLE_ROLES.get('Pokemon Bot Games')}> <@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready! There is only ${numberOfRounds} round in this game!`);
         }
     } else {
-        if(numberOfRounds > 1) {
+        if (numberOfRounds > 1) {
             interaction.reply(`<@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready for the first round! There are ${numberOfRounds} rounds in this game!`);
-        }
-        else {
+        } else {
             interaction.reply(`<@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready! There is only ${numberOfRounds} round in this game!`);
         }
     }
@@ -141,19 +156,23 @@ const playRound = async () => {
 }
 
 const postPokedexEntry = async () => {
-    let totalPokemonCount = await findTotalPokemonCount();
-    console.log(totalPokemonCount)
+    let pokemonSearchRange = await findPokemonSearchRange();
 
-    let randomPokemonNumber = getRandomInteger(1, totalPokemonCount);
+    let randomPokemonNumber = getRandomInteger(pokemonSearchRange[0], pokemonSearchRange[1]);
 
     await axios.get(`${currentGame.apiUri}/${randomPokemonNumber}`).then(async response => {
-        console.log(response.data[0].name)
         let pendingAnswer = removeUnnecessaryInfo(response.data[0].name);
 
         // Pokedex API has Rhydon's name wrong, hardcode fix
         if (randomPokemonNumber === 112) {
             pendingAnswer = 'Rhydon';
         }
+
+        if (randomPokemonNumber === 720) {
+            pendingAnswer = 'Hoopa';
+        }
+
+        console.log(pendingAnswer);
 
         let message = `**Guess the Pokémon from this description:** \n*${response.data[0].description}*`;
         message = censorCorrectAnswerFromMessage(message, pendingAnswer, 'POKéMON');
@@ -166,18 +185,23 @@ const postPokedexEntry = async () => {
 }
 
 const postMysteryPokemon = async () => {
-    let totalPokemonCount = await findTotalPokemonCount();
+    let pokemonSearchRange = await findPokemonSearchRange();
 
-    let randomPokemonNumber = getRandomInteger(1, totalPokemonCount);
+    let randomPokemonNumber = getRandomInteger(pokemonSearchRange[0], pokemonSearchRange[1]);
 
     await axios.get(`${currentGame.apiUri}/${randomPokemonNumber}`).then(async response => {
-        console.log(response.data[0].name)
         let pendingAnswer = removeUnnecessaryInfo(response.data[0].name);
 
         // Pokedex API has Rhydon's name wrong, hardcode fix
         if (randomPokemonNumber === 112) {
             pendingAnswer = 'Rhydon';
         }
+
+        if (randomPokemonNumber === 720) {
+            pendingAnswer = 'Hoopa';
+        }
+
+        console.log(pendingAnswer)
 
         await buildPokemonEmbed(pendingAnswer, response.data[0].description, response.data[0].sprite, true);
         await typeMessageAndSetAnswer(null, pendingAnswer);
@@ -188,23 +212,34 @@ const postMysteryPokemon = async () => {
 }
 
 const removeUnnecessaryInfo = (pendingAnswer) => {
-    let answer = pendingAnswer.split(' - ');
-    answer = answer[0].replace('♂️', '');
+    let answer = pendingAnswer;
+    if (answer.includes(" - ")) {
+        answer = answer.split(" - ")[0]
+    }
+    console.log(answer)
+    answer = answer.replace('♂️', '');
+    answer = answer.replace('♂', '');
     answer = answer.replace('♀️', '');
+    answer = answer.replace('♀', '');
+    console.log(answer)
 
     return answer;
 }
 
-const findTotalPokemonCount = async () => {
-    let total;
-    await axios.get(`${currentGame.apiUri}/counts`).then(response => {
-        total = response.data.total;
-    }).catch(error => {
-        showAndResetLeaderboard('The game is ending early due to an unexpected error.');
-        console.log(error);
-    });
+const findPokemonSearchRange = async () => {
+    let min = 1;
+    let max;
+    if (!genRestriction) {
+        await axios.get(`${currentGame.apiUri}/counts`).then(response => {
+            max = response.data.total;
+        }).catch(error => {
+            showAndResetLeaderboard('The game is ending early due to an unexpected error.');
+            console.log(error);
+        });
 
-    return total;
+        return [min, max]
+    }
+    return POKEMON_GEN_MAP[genRestriction];
 }
 
 const buildPokemonEmbed = async (pokemonName, pokemonDescription, imageUrl, needsSilhouette = false) => {
@@ -224,10 +259,8 @@ const buildPokemonEmbed = async (pokemonName, pokemonDescription, imageUrl, need
     let attachment = new AttachmentBuilder(image, {name: 'pokemon.png'});
 
 
-    let revealedEmbed = new EmbedBuilder().setTitle(`It's **${pokemonName}!**`).setColor([255, 0, 0])
+    embedData.answer.embed = new EmbedBuilder().setTitle(`It's **${pokemonName}!**`).setColor([255, 0, 0])
         .setDescription(pokemonDescription).setImage('attachment://pokemon.png');
-
-    embedData.answer.embed = revealedEmbed;
     embedData.answer.attachment = attachment;
 }
 
@@ -256,10 +289,10 @@ const typeMessageAndSetAnswer = async (message, answer) => {
                 files: [embedData.question.attachment]
             }) :
             await discordChannel.send(`${message}`);
-            questionTime = new Date();
-            if(embedData.question.embed){
-                questionTime.setSeconds(questionTime.getSeconds()+2);
-            }
+        questionTime = new Date();
+        if (embedData.question.embed) {
+            questionTime.setSeconds(questionTime.getSeconds() + 2);
+        }
 
         correctAnswer = answer;
     }, 5000)
@@ -286,17 +319,16 @@ function getRandomInteger(min, max) {
 }
 
 const createPlayerEntry = (author) => {
-    const player = {
+    return {
         player: author,
         points: answerPoints
     }
-    return player
 }
 
 const addPoint = (message) => {
     let playerOnBoard = false;
     leaderBoard.forEach(position => {
-        if (position.player == message.author) {
+        if (position.player === message.author) {
             playerOnBoard = true;
             position.points += answerPoints;
         }
@@ -307,9 +339,9 @@ const addPoint = (message) => {
 }
 
 const convertSpeedToPoints = () => {
-    let points = (answerSpeed/30)*100;
+    let points = (answerSpeed / 30) * 100;
     points = Math.floor(points);
-    answerPoints = 100-points
+    answerPoints = 100 - points
 }
 
 const showAndResetLeaderboard = (message) => {
@@ -361,6 +393,7 @@ const showAndResetLeaderboard = (message) => {
     leaderBoard = [];
     currentGame = null;
     isGameOngoing = false;
+    genRestriction = null;
 }
 
 const handleAnswerAttempt = async (message) => {
@@ -370,13 +403,14 @@ const handleAnswerAttempt = async (message) => {
             correctAnswer = null;
             clearTimeout(timeoutId);
             answerTime = new Date();
-            answerSpeed = ((answerTime-questionTime)/1000).toFixed(2);
+            answerSpeed = ((answerTime - questionTime) / 1000).toFixed(2);
             convertSpeedToPoints();
-            if(answerSpeed <= 0){
+            if (answerSpeed <= 0) {
                 answerSpeed = 0.01;
                 answerPoints = 100;
             }
             addPoint(message);
+            message.react(`✅`).catch(err => console.error(err));
             await message.reply(`Congrats ${message.author} you were first to send the correct answer of **${answerWas}**! In ${answerSpeed} seconds, earning you **${answerPoints}** points!`);
 
             if (embedData.answer.embed) {
@@ -404,7 +438,8 @@ const cleanDataForNextRound = () => {
         answer: {
             embed: undefined,
             attachment: undefined
-        }};
+        }
+    };
     numberOfRounds--;
 }
 
