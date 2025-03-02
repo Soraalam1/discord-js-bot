@@ -45,7 +45,8 @@ let questionTime;
 let answerTime;
 let answerSpeed;
 let answerPoints;
-let bonusPoints;
+let bonusPoints = 0;
+let incorrectCount = 0;
 let embedData = {
     question: {
         embed: undefined,
@@ -125,14 +126,14 @@ const postReady = async (interaction) => {
 
 const notifyForFirstRound = (interaction) => {
     if (currentGame.commandName === 'whosthatpokemon' || currentGame.commandName === 'pokedex') {
+        let genInfo = '';
         if (numberOfRounds > 1) {
-            let genInfo = '';
             if (genRestriction) {
                 genInfo = `This game will be **Gen ${genRestriction} Pokemon** only.`
             }
             interaction.reply(`<@&${MENTIONABLE_ROLES.get('Pokemon Bot Games')}> <@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready for the first round! There are ${numberOfRounds} rounds in this game! ${genInfo}`);
         } else {
-            interaction.reply(`<@&${MENTIONABLE_ROLES.get('Pokemon Bot Games')}> <@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready! There is only ${numberOfRounds} round in this game!`);
+            interaction.reply(`<@&${MENTIONABLE_ROLES.get('Pokemon Bot Games')}> <@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready! There is only ${numberOfRounds} round in this game! ${genInfo}`);
         }
     } else {
         if (numberOfRounds > 1) {
@@ -345,7 +346,6 @@ const addPoint = (message) => {
     if (!playerOnBoard) {
         leaderBoard.push(createPlayerEntry(message.author));
     }
-    bonusPoints = 0;
 }
 
 const calculateAnswerPoints = () => {
@@ -363,11 +363,17 @@ const showAndResetLeaderboard = (message) => {
     discordChannel.send(message);
 
     if (leaderBoard.length < 1) {
-        discordChannel.send('Nobody earned any points at all. Try harder!');
+        if (incorrectCount === 1) {
+            discordChannel.send(`Nobody earned any points at all, and there was only ${incorrectCount} incorrect guess. Try harder!`);
+        } else {
+            discordChannel.send(`Nobody earned any points at all, and there were ${incorrectCount} incorrect guesses. Try harder!`);
+        }
+
         leaderBoard = [];
         currentGame = null;
         isGameOngoing = false;
         bonusPoints = 0;
+        incorrectCount = 0;
         return;
     }
 
@@ -411,6 +417,7 @@ const showAndResetLeaderboard = (message) => {
     isGameOngoing = false;
     genRestriction = null;
     bonusPoints = 0;
+    incorrectCount = 0;
 }
 
 const handleAnswerAttempt = async (message) => {
@@ -424,7 +431,12 @@ const handleAnswerAttempt = async (message) => {
             calculateAnswerPoints();
             addPoint(message);
             message.react(`✅`).catch(err => console.error(err));
-            await message.reply(`Congrats ${message.author} you were first to send the correct answer of **${answerWas}**! In ${answerSpeed} seconds, earning you **${answerPoints}** points!`);
+            if (incorrectCount === 1) {
+                await message.reply(`Congrats ${message.author} you were first to send the correct answer of **${answerWas}**! In ${answerSpeed} seconds, with **${incorrectCount} incorrect guess before you**, earning you **${answerPoints}** points!`);
+            } else {
+                await message.reply(`Congrats ${message.author} you were first to send the correct answer of **${answerWas}**! In ${answerSpeed} seconds, with **${incorrectCount} incorrect guesses before you**, earning you **${answerPoints}** points!`);
+
+            }
 
             if (embedData.answer.embed) {
                 await message.channel.send({
@@ -437,6 +449,7 @@ const handleAnswerAttempt = async (message) => {
             postReady();
         } else if (`<#${message.channel.id}>` === gameLocation) {
             bonusPoints += 20;
+            incorrectCount += 1;
             message.react(`❌`).catch(err => console.error(err));
         }
     }
@@ -456,6 +469,7 @@ const cleanDataForNextRound = () => {
     };
     numberOfRounds--;
     bonusPoints = 0;
+    incorrectCount = 0;
     timeoutId = null;
 }
 
