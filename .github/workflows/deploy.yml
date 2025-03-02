@@ -19,7 +19,7 @@ jobs:
             echo sudo apt-get update && sudo apt-get update &&
             echo cd discord-js-bot && cd discord-js-bot/ && 
             echo node -v && node -v &&
-            echo pkill -9 node && pkill -9 node
+            echo killall node && killall node
             echo sudo npm install -g pm2 && sudo npm install -g pm2 && 
             echo git stash && git stash &&
             echo git pull origin master && git pull origin master &&
