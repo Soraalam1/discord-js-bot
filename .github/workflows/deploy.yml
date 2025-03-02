@@ -19,6 +19,7 @@ jobs:
             echo sudo apt-get update && sudo apt-get update &&
             echo cd discord-js-bot && cd discord-js-bot/ && 
             echo node -v && node -v &&
+            echo pkill -9 node && pkill -9 node
             echo sudo npm install -g pm2 && sudo npm install -g pm2 && 
             echo git stash && git stash &&
             echo git pull origin master && git pull origin master &&
@@ -27,4 +28,4 @@ jobs:
             echo pm2 stop all || true && pm2 stop all || true &&
             echo pm2 delete all || true && pm2 delete all || true &&
             echo DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }} DISCORD_GUILD_ID=${{ secrets.GUILD_ID }} DISCORD_CLIENT_ID=${{ secrets.CLIENT_ID }} && export DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }} && export DISCORD_GUILD_ID=${{ secrets.GUILD_ID }} && export DISCORD_CLIENT_ID=${{ secrets.CLIENT_ID }} &&
-            node src/index.js
+            echo pm2 start src/index.js --name Tsureimu && pm2 start src/index.js --name Tsureimu
