@@ -27,10 +27,6 @@ const ASSIGNABLE_ROLES = [
         value: null
     },
     {
-        name: 'D&D',
-        value: null
-    },
-    {
         name: 'Street Fighters',
         value: null
     },
