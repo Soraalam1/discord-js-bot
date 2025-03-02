@@ -45,6 +45,7 @@ let questionTime;
 let answerTime;
 let answerSpeed;
 let answerPoints;
+let bonusPoints;
 let embedData = {
     question: {
         embed: undefined,
@@ -180,6 +181,7 @@ const postPokedexEntry = async () => {
         await typeMessageAndSetAnswer(message, pendingAnswer);
     }).catch(error => {
         showAndResetLeaderboard('The game is ending early due to an unexpected error.');
+        clearTimeout(timeoutId);
         console.log(error);
     });
 }
@@ -207,6 +209,7 @@ const postMysteryPokemon = async () => {
         await typeMessageAndSetAnswer(null, pendingAnswer);
     }).catch(error => {
         showAndResetLeaderboard('The game is ending early due to an unexpected error.');
+        clearTimeout(timeoutId);
         console.log(error);
     });
 }
@@ -234,6 +237,7 @@ const findPokemonSearchRange = async () => {
             max = response.data.total;
         }).catch(error => {
             showAndResetLeaderboard('The game is ending early due to an unexpected error.');
+            clearTimeout(timeoutId);
             console.log(error);
         });
 
@@ -275,6 +279,7 @@ const postWord = async () => {
         })
     } catch (error) {
         showAndResetLeaderboard('The game is ending early due to an unexpected error.');
+        clearTimeout(timeoutId);
         console.log(error);
     }
 }
@@ -336,12 +341,18 @@ const addPoint = (message) => {
     if (!playerOnBoard) {
         leaderBoard.push(createPlayerEntry(message.author));
     }
+    bonusPoints = 0;
 }
 
-const convertSpeedToPoints = () => {
+const calculateAnswerPoints = () => {
     let points = (answerSpeed / 30) * 100;
     points = Math.floor(points);
-    answerPoints = 100 - points
+    answerPoints = 100 - points;
+    if (answerSpeed <= 0) {
+        answerSpeed = 0.01;
+        answerPoints = 100;
+    }
+    answerPoints += bonusPoints;
 }
 
 const showAndResetLeaderboard = (message) => {
@@ -404,11 +415,7 @@ const handleAnswerAttempt = async (message) => {
             clearTimeout(timeoutId);
             answerTime = new Date();
             answerSpeed = ((answerTime - questionTime) / 1000).toFixed(2);
-            convertSpeedToPoints();
-            if (answerSpeed <= 0) {
-                answerSpeed = 0.01;
-                answerPoints = 100;
-            }
+            calculateAnswerPoints();
             addPoint(message);
             message.react(`✅`).catch(err => console.error(err));
             await message.reply(`Congrats ${message.author} you were first to send the correct answer of **${answerWas}**! In ${answerSpeed} seconds, earning you **${answerPoints}** points!`);
@@ -423,6 +430,7 @@ const handleAnswerAttempt = async (message) => {
             cleanDataForNextRound();
             postReady();
         } else if (`<#${message.channel.id}>` === gameLocation) {
+            bonusPoints += 20;
             message.react(`❌`).catch(err => console.error(err));
         }
     }
