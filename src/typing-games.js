@@ -45,7 +45,8 @@ let questionTime;
 let answerTime;
 let answerSpeed;
 let answerPoints;
-let bonusPoints;
+let bonusPoints = 0;
+let incorrectCount = 0;
 let embedData = {
     question: {
         embed: undefined,
@@ -345,7 +346,6 @@ const addPoint = (message) => {
     if (!playerOnBoard) {
         leaderBoard.push(createPlayerEntry(message.author));
     }
-    bonusPoints = 0;
 }
 
 const calculateAnswerPoints = () => {
@@ -363,11 +363,12 @@ const showAndResetLeaderboard = (message) => {
     discordChannel.send(message);
 
     if (leaderBoard.length < 1) {
-        discordChannel.send('Nobody earned any points at all. Try harder!');
+        discordChannel.send(`Nobody earned any points at all, and there were ${incorrectCount} incorrect guesses. Try harder!`);
         leaderBoard = [];
         currentGame = null;
         isGameOngoing = false;
         bonusPoints = 0;
+        incorrectCount = 0;
         return;
     }
 
@@ -424,7 +425,7 @@ const handleAnswerAttempt = async (message) => {
             calculateAnswerPoints();
             addPoint(message);
             message.react(`✅`).catch(err => console.error(err));
-            await message.reply(`Congrats ${message.author} you were first to send the correct answer of **${answerWas}**! In ${answerSpeed} seconds, earning you **${answerPoints}** points!`);
+            await message.reply(`Congrats ${message.author} you were first to send the correct answer of **${answerWas}**! In ${answerSpeed} seconds, with **${incorrectCount} incorrect guesses before you**, earning you **${answerPoints}** points!`);
 
             if (embedData.answer.embed) {
                 await message.channel.send({
