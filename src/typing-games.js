@@ -45,6 +45,7 @@ let questionTime;
 let answerTime;
 let answerSpeed;
 let answerPoints;
+let bonusPoints;
 let embedData = {
     question: {
         embed: undefined,
@@ -125,7 +126,11 @@ const postReady = async (interaction) => {
 const notifyForFirstRound = (interaction) => {
     if (currentGame.commandName === 'whosthatpokemon' || currentGame.commandName === 'pokedex') {
         if (numberOfRounds > 1) {
-            interaction.reply(`<@&${MENTIONABLE_ROLES.get('Pokemon Bot Games')}> <@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready for the first round! There are ${numberOfRounds} rounds in this game!`);
+            let genInfo = '';
+            if (genRestriction) {
+                genInfo = `This game will be **Gen ${genRestriction} Pokemon** only.`
+            }
+            interaction.reply(`<@&${MENTIONABLE_ROLES.get('Pokemon Bot Games')}> <@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready for the first round! There are ${numberOfRounds} rounds in this game! ${genInfo}`);
         } else {
             interaction.reply(`<@&${MENTIONABLE_ROLES.get('Pokemon Bot Games')}> <@&${MENTIONABLE_ROLES.get('Bot Games')}>, get ready! There is only ${numberOfRounds} round in this game!`);
         }
@@ -180,6 +185,7 @@ const postPokedexEntry = async () => {
         await typeMessageAndSetAnswer(message, pendingAnswer);
     }).catch(error => {
         showAndResetLeaderboard('The game is ending early due to an unexpected error.');
+        clearTimeout(timeoutId);
         console.log(error);
     });
 }
@@ -207,6 +213,7 @@ const postMysteryPokemon = async () => {
         await typeMessageAndSetAnswer(null, pendingAnswer);
     }).catch(error => {
         showAndResetLeaderboard('The game is ending early due to an unexpected error.');
+        clearTimeout(timeoutId);
         console.log(error);
     });
 }
@@ -234,6 +241,7 @@ const findPokemonSearchRange = async () => {
             max = response.data.total;
         }).catch(error => {
             showAndResetLeaderboard('The game is ending early due to an unexpected error.');
+            clearTimeout(timeoutId);
             console.log(error);
         });
 
@@ -275,6 +283,7 @@ const postWord = async () => {
         })
     } catch (error) {
         showAndResetLeaderboard('The game is ending early due to an unexpected error.');
+        clearTimeout(timeoutId);
         console.log(error);
     }
 }
@@ -336,12 +345,18 @@ const addPoint = (message) => {
     if (!playerOnBoard) {
         leaderBoard.push(createPlayerEntry(message.author));
     }
+    bonusPoints = 0;
 }
 
-const convertSpeedToPoints = () => {
+const calculateAnswerPoints = () => {
     let points = (answerSpeed / 30) * 100;
     points = Math.floor(points);
-    answerPoints = 100 - points
+    answerPoints = 100 - points;
+    if (answerSpeed <= 0) {
+        answerSpeed = 0.01;
+        answerPoints = 100;
+    }
+    answerPoints += bonusPoints;
 }
 
 const showAndResetLeaderboard = (message) => {
@@ -352,6 +367,7 @@ const showAndResetLeaderboard = (message) => {
         leaderBoard = [];
         currentGame = null;
         isGameOngoing = false;
+        bonusPoints = 0;
         return;
     }
 
@@ -394,6 +410,7 @@ const showAndResetLeaderboard = (message) => {
     currentGame = null;
     isGameOngoing = false;
     genRestriction = null;
+    bonusPoints = 0;
 }
 
 const handleAnswerAttempt = async (message) => {
@@ -404,11 +421,7 @@ const handleAnswerAttempt = async (message) => {
             clearTimeout(timeoutId);
             answerTime = new Date();
             answerSpeed = ((answerTime - questionTime) / 1000).toFixed(2);
-            convertSpeedToPoints();
-            if (answerSpeed <= 0) {
-                answerSpeed = 0.01;
-                answerPoints = 100;
-            }
+            calculateAnswerPoints();
             addPoint(message);
             message.react(`✅`).catch(err => console.error(err));
             await message.reply(`Congrats ${message.author} you were first to send the correct answer of **${answerWas}**! In ${answerSpeed} seconds, earning you **${answerPoints}** points!`);
@@ -423,6 +436,7 @@ const handleAnswerAttempt = async (message) => {
             cleanDataForNextRound();
             postReady();
         } else if (`<#${message.channel.id}>` === gameLocation) {
+            bonusPoints += 20;
             message.react(`❌`).catch(err => console.error(err));
         }
     }
@@ -441,6 +455,8 @@ const cleanDataForNextRound = () => {
         }
     };
     numberOfRounds--;
+    bonusPoints = 0;
+    timeoutId = null;
 }
 
 
