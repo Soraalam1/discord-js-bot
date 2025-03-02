@@ -432,9 +432,9 @@ const handleAnswerAttempt = async (message) => {
             addPoint(message);
             message.react(`✅`).catch(err => console.error(err));
             if (incorrectCount === 1) {
-                await message.reply(`Congrats ${message.author} you were first to send the correct answer of **${answerWas}**! In ${answerSpeed} seconds, with **${incorrectCount} incorrect guess before you**, earning you **${answerPoints}** points!`);
+                await message.reply(`Congrats ${message.author} you were first to send the correct answer of **${answerWas}**! In **${answerSpeed} seconds**, with **${incorrectCount} incorrect guess before you**, earning you **${answerPoints}** points!`);
             } else {
-                await message.reply(`Congrats ${message.author} you were first to send the correct answer of **${answerWas}**! In ${answerSpeed} seconds, with **${incorrectCount} incorrect guesses before you**, earning you **${answerPoints}** points!`);
+                await message.reply(`Congrats ${message.author} you were first to send the correct answer of **${answerWas}**! In **${answerSpeed} seconds**, with **${incorrectCount} incorrect guesses before you**, earning you **${answerPoints}** points!`);
 
             }
 
