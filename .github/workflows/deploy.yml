@@ -16,21 +16,21 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: >-
-            sudo apt-get update &&
-            cd discord-js-bot/ && 
-            node -v &&
-            sudo npm install -g pm2 && 
-            git stash &&
-            git pull origin master &&
-            npm install &&
-            npm ci &&
-            pm2 start src/index.js --name Tsureimu &&
-            pm2 save &&
-            pm2 stop all || true &&
-            pm2 delete all || true &&
-            DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }} DISCORD_GUILD_ID=${{ secrets.GUILD_ID }} DISCORD_CLIENT_ID=${{ secrets.CLIENT_ID }} &&
-            printenv DISCORD_BOT_TOKEN &&
-            printenv DISCORD_GUILD_ID &&
-            printenv DISCORD_CLIENT_ID &&
-            node src/index.js
+                    echo sudo apt-get update && sudo apt-get update &&
+                    echo cd discord-js-bot && cd discord-js-bot/ && 
+                    echo node -v && node -v &&
+                    echo sudo npm install -g pm2 && sudo npm install -g pm2 && 
+                    echo git stash && git stash &&
+                    echo git pull origin master && git pull origin master &&
+                    echo npm install && npm install &&
+                    echo npm ci && npm ci &&
+                    echo pm2 start src/index.js --name Tsureimu && pm2 start src/index.js --name Tsureimu &&
+                    echo pm2 save && pm2 save &&
+                    echo pm2 stop all || true && pm2 stop all || true &&
+                    echo pm2 delete all || true && pm2 delete all || true &&
+                    echo DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }} DISCORD_GUILD_ID=${{ secrets.GUILD_ID }} DISCORD_CLIENT_ID=${{ secrets.CLIENT_ID }} && DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }} DISCORD_GUILD_ID=${{ secrets.GUILD_ID }} DISCORD_CLIENT_ID=${{ secrets.CLIENT_ID }} &&
+            #            printenv DISCORD_BOT_TOKEN &&
+            #            printenv DISCORD_GUILD_ID &&
+            #            printenv DISCORD_CLIENT_ID &&
+                    echo node src/index.js && node src/index.js
 
