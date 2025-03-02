@@ -25,7 +25,6 @@ jobs:
             echo npm install && npm install &&
             echo npm ci && npm ci &&
             echo pm2 start src/index.js --name Tsureimu && pm2 start src/index.js --name Tsureimu &&
-            echo pm2 save && pm2 save &&
             echo pm2 stop all || true && pm2 stop all || true &&
             echo pm2 delete all || true && pm2 delete all || true &&
             echo DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }} DISCORD_GUILD_ID=${{ secrets.GUILD_ID }} DISCORD_CLIENT_ID=${{ secrets.CLIENT_ID }} && DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }} DISCORD_GUILD_ID=${{ secrets.GUILD_ID }} DISCORD_CLIENT_ID=${{ secrets.CLIENT_ID }} &&
