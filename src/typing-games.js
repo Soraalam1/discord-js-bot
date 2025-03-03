@@ -47,6 +47,7 @@ let answerSpeed;
 let answerPoints;
 let bonusPoints = 0;
 let incorrectCount = 0;
+let previousPokemon = [];
 let embedData = {
     question: {
         embed: undefined,
@@ -170,6 +171,12 @@ const postPokedexEntry = async () => {
 
     let randomPokemonNumber = getRandomInteger(pokemonSearchRange[0], pokemonSearchRange[1]);
 
+    while (previousPokemon.includes(randomPokemonNumber)) {
+        randomPokemonNumber = getRandomInteger(pokemonSearchRange[0], pokemonSearchRange[1]);
+    }
+
+    previousPokemon.push(randomPokemonNumber);
+
     await axios.get(`${currentGame.apiUri}/${randomPokemonNumber}`).then(async response => {
         let pendingAnswer = removeUnnecessaryInfo(response.data[0].name);
 
@@ -199,6 +206,12 @@ const postMysteryPokemon = async () => {
     let pokemonSearchRange = await findPokemonSearchRange();
 
     let randomPokemonNumber = getRandomInteger(pokemonSearchRange[0], pokemonSearchRange[1]);
+
+    while (previousPokemon.includes(randomPokemonNumber)) {
+        randomPokemonNumber = getRandomInteger(pokemonSearchRange[0], pokemonSearchRange[1]);
+    }
+
+    previousPokemon.push(randomPokemonNumber);
 
     await axios.get(`${currentGame.apiUri}/${randomPokemonNumber}`).then(async response => {
         let pendingAnswer = removeUnnecessaryInfo(response.data[0].name);
@@ -375,6 +388,7 @@ const showAndResetLeaderboard = (message) => {
         isGameOngoing = false;
         bonusPoints = 0;
         incorrectCount = 0;
+        previousPokemon = [];
         return;
     }
 
@@ -419,6 +433,7 @@ const showAndResetLeaderboard = (message) => {
     genRestriction = null;
     bonusPoints = 0;
     incorrectCount = 0;
+    previousPokemon = [];
 }
 
 const handleAnswerAttempt = async (message) => {
