@@ -35,7 +35,7 @@ const POKEMON_GEN_MAP = {
     6: [650, 721],
     7: [722, 807]
 }
-
+//test
 let correctAnswer;
 let numberOfRounds = 0;
 let genRestriction = null;
