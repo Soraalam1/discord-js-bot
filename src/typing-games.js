@@ -18,7 +18,12 @@ const GAME_LIST = [
         gameTitle: "Who's that Pokemon?",
         commandName: 'whosthatpokemon',
         apiUri: 'https://pokeapi.glitch.me/v1/pokemon'
-    }
+    },
+    {
+        gameTitle: "What's that Yu-Gi-Oh! Card?",
+        commandName: 'yugioh',
+        apiUri: 'https://db.ygoprodeck.com/api/v7'
+    },
 ]
 
 const POKEMON_GEN_MAP = {
@@ -47,7 +52,7 @@ let answerSpeed;
 let answerPoints;
 let bonusPoints = 0;
 let incorrectCount = 0;
-let previousPokemon = [];
+let previousMonster = [];
 let embedData = {
     question: {
         embed: undefined,
@@ -161,9 +166,44 @@ const playRound = async () => {
         case 'whosthatpokemon':
             await postMysteryPokemon();
             break;
+        case 'yugioh':
+            await postYuGiOhCard();
+            break;
         default:
             break;
     }
+}
+
+const postYuGiOhCard = async () => {
+    await axios.get(`${currentGame.apiUri}/randomcard.php`).then(async response => {
+        console.log(response.data.data[0])
+        let retrievedCard = response.data.data[0];
+        let pendingAnswer = retrievedCard.name;
+        let croppedImageUrl = retrievedCard.card_images[0].image_url_cropped;
+        let fullCardImageUrl = retrievedCard.card_images[0].image_url;
+
+        console.log(pendingAnswer)
+
+        buildYuGiOhEmbeds(pendingAnswer, croppedImageUrl, fullCardImageUrl, retrievedCard.desc);
+        await typeMessageAndSetAnswer(null, pendingAnswer);
+    })
+}
+
+const buildYuGiOhEmbeds = (cardTitle, croppedImageUrl, fullCardImageUrl, cardDescription) => {
+    let mysteryEmbed = new EmbedBuilder().setTitle(`Name this Yu-Gi-Oh! card`).setColor([55, 82, 135])
+        .setImage(croppedImageUrl);
+
+
+    let mysteryAttachment = new AttachmentBuilder(croppedImageUrl, {name: 'mystery-card.png'});
+
+    embedData.question.embed = mysteryEmbed;
+    //embedData.question.attachment = mysteryAttachment;
+
+    let answerAttachment = new AttachmentBuilder(fullCardImageUrl, {name: 'revealed-card.png'});
+
+    embedData.answer.embed = new EmbedBuilder().setTitle(`The answer was **${cardTitle}!**`).setColor([55, 82, 135])
+        .setDescription(cardDescription).setImage(fullCardImageUrl);
+    //embedData.answer.attachment = answerAttachment;
 }
 
 const postPokedexEntry = async () => {
@@ -171,11 +211,11 @@ const postPokedexEntry = async () => {
 
     let randomPokemonNumber = getRandomInteger(pokemonSearchRange[0], pokemonSearchRange[1]);
 
-    while (previousPokemon.includes(randomPokemonNumber)) {
+    while (previousMonster.includes(randomPokemonNumber)) {
         randomPokemonNumber = getRandomInteger(pokemonSearchRange[0], pokemonSearchRange[1]);
     }
 
-    previousPokemon.push(randomPokemonNumber);
+    previousMonster.push(randomPokemonNumber);
 
     await axios.get(`${currentGame.apiUri}/${randomPokemonNumber}`).then(async response => {
         let pendingAnswer = removeUnnecessaryInfo(response.data[0].name);
@@ -207,11 +247,11 @@ const postMysteryPokemon = async () => {
 
     let randomPokemonNumber = getRandomInteger(pokemonSearchRange[0], pokemonSearchRange[1]);
 
-    while (previousPokemon.includes(randomPokemonNumber)) {
+    while (previousMonster.includes(randomPokemonNumber)) {
         randomPokemonNumber = getRandomInteger(pokemonSearchRange[0], pokemonSearchRange[1]);
     }
 
-    previousPokemon.push(randomPokemonNumber);
+    previousMonster.push(randomPokemonNumber);
 
     await axios.get(`${currentGame.apiUri}/${randomPokemonNumber}`).then(async response => {
         let pendingAnswer = removeUnnecessaryInfo(response.data[0].name);
@@ -313,7 +353,7 @@ const typeMessageAndSetAnswer = async (message, answer) => {
 
         embedData.question.embed ? discordChannel.send({
                 embeds: [embedData.question.embed.setTimestamp(new Date()).toJSON()],
-                files: [embedData.question.attachment]
+                files: embedData.question.attachment ? [embedData.question.attachment] : []
             }) :
             await discordChannel.send(`${message}`);
         questionTime = new Date();
@@ -388,7 +428,7 @@ const showAndResetLeaderboard = (message) => {
         isGameOngoing = false;
         bonusPoints = 0;
         incorrectCount = 0;
-        previousPokemon = [];
+        previousMonster = [];
         return;
     }
 
@@ -433,7 +473,7 @@ const showAndResetLeaderboard = (message) => {
     genRestriction = null;
     bonusPoints = 0;
     incorrectCount = 0;
-    previousPokemon = [];
+    previousMonster = [];
 }
 
 const handleAnswerAttempt = async (message) => {
@@ -457,7 +497,7 @@ const handleAnswerAttempt = async (message) => {
             if (embedData.answer.embed) {
                 await message.channel.send({
                     embeds: [embedData.answer.embed.setTimestamp(new Date()).toJSON()],
-                    files: [embedData.answer.attachment]
+                    files: embedData.answer.attachment ? [embedData.answer.attachment] : []
                 })
             }
 
