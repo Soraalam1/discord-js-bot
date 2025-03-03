@@ -50,12 +50,12 @@ let incorrectCount = 0;
 let previousPokemon = [];
 let embedData = {
     question: {
-        embed: undefined,
-        attachment: undefined
+        embed: null,
+        attachment: null
     },
     answer: {
-        embed: undefined,
-        attachment: undefined
+        embed: null,
+        attachment: null
     }
 };
 
