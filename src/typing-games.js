@@ -122,7 +122,7 @@ const postReady = async (interaction) => {
             if (embedData.answer.embed) {
                 await discordChannel.send({
                     embeds: [embedData.answer.embed.setTimestamp(new Date()).toJSON()],
-                    files: embedData.answer.attachment ? [embedData.answer.embed] : []
+                    files: embedData.answer.attachment ? [embedData.answer.attachment] : []
                 })
             }
 
