@@ -107,7 +107,11 @@ const postReady = async (interaction) => {
         timeoutId = setTimeout(async () => {
             let answerWas = correctAnswer;
             correctAnswer = null;
-            await discordChannel.send(`Nobody typed it in time. The correct answer was: **${answerWas}**!`)
+            if (incorrectCount === 1) {
+                await discordChannel.send(`Nobody typed it in time, and there was only ${incorrectCount} incorrect guess. The correct answer was: **${answerWas}**!`)
+
+            }
+            await discordChannel.send(`Nobody typed it in time, and there were ${incorrectCount} incorrect guesses. The correct answer was: **${answerWas}**!`)
 
             if (embedData.answer.embed) {
                 await discordChannel.send({
@@ -363,11 +367,8 @@ const showAndResetLeaderboard = (message) => {
     discordChannel.send(message);
 
     if (leaderBoard.length < 1) {
-        if (incorrectCount === 1) {
-            discordChannel.send(`Nobody earned any points at all, and there was only ${incorrectCount} incorrect guess. Try harder!`);
-        } else {
-            discordChannel.send(`Nobody earned any points at all, and there were ${incorrectCount} incorrect guesses. Try harder!`);
-        }
+        discordChannel.send(`Nobody earned any points at all. Try harder!`);
+
 
         leaderBoard = [];
         currentGame = null;
