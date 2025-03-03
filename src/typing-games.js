@@ -35,7 +35,7 @@ const POKEMON_GEN_MAP = {
     6: [650, 721],
     7: [722, 807]
 }
-//test
+
 let correctAnswer;
 let numberOfRounds = 0;
 let genRestriction = null;
@@ -122,7 +122,7 @@ const postReady = async (interaction) => {
             if (embedData.answer.embed) {
                 await discordChannel.send({
                     embeds: [embedData.answer.embed.setTimestamp(new Date()).toJSON()],
-                    files: [embedData.answer.attachment]
+                    files: embedData.answer.attachment ? [embedData.answer.embed] : []
                 })
             }
 
