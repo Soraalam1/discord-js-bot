@@ -173,6 +173,20 @@ const commands = [
         ]
     },
     {
+        name: 'yugioh',
+        description: "Guess the Yu-Gi-Oh card from the artwork!",
+        options: [
+            {
+                name: 'rounds',
+                description: 'The number of rounds',
+                type: ApplicationCommandOptionType.Number,
+                required: true,
+                min_value: 1,
+                max_value: 12,
+            }
+        ]
+    },
+    {
         name: 'roleselect',
         description: 'Assign yourself a role within the server!',
         options: [
