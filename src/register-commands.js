@@ -54,6 +54,10 @@ const ASSIGNABLE_ROLES = [
         name: 'JRPG Enjoyer',
         value: null
     },
+    {
+        name: 'Pokemon Center',
+        value: null
+    }
 ]
 
 const MENTIONABLE_ROLES_LIST = [
