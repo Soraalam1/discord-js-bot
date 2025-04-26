@@ -12,7 +12,6 @@
   "dependencies": {
     "@napi-rs/canvas": "^0.1.41",
     "axios": "1.8.2",
-    "discord-js-bot": "file:",
     "discord.js": "^14.12.0-dev.1690071081-6307f81.0",
     "dotenv": "^16.3.1",
     "moment-timezone": "^0.5.43",
