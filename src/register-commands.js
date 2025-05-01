@@ -55,7 +55,7 @@ const ASSIGNABLE_ROLES = [
         value: null
     },
     {
-        name: 'Pokemon Center',
+        name: 'PokeDrops',
         value: null
     }
 ]
