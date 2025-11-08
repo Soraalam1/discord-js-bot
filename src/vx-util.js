@@ -144,14 +144,14 @@ const vxTikTok = (message) => {
 }
 
 const instaFix = (message) => {
-    let fixedMessage = message.cleanContent.replace("instagram.com/", "ddinstagram.com/");
+    let fixedMessage = message.cleanContent.replace("instagram.com/", "kkinstagram.com/");
     console.log(`Instagram link found in #${message.channel.name}, reposting with dd`);
     console.log(fixedMessage);
 
     let instaURL;
 
     try {
-        instaURL = fixedMessage.match(/(https?:\/\/(.+?\.)?ddinstagram\.com(\/[A-Za-z0-9\-\._~:\/\?#\[\]@!$&'\(\)\*\+,;\=]*)?)/)[1];
+        instaURL = fixedMessage.match(/(https?:\/\/(.+?\.)?kkinstagram\.com(\/[A-Za-z0-9\-\._~:\/\?#\[\]@!$&'\(\)\*\+,;\=]*)?)/)[1];
         instaURL = removeParams(instaURL);
         return instaURL;
     } catch (error) {
@@ -160,9 +160,9 @@ const instaFix = (message) => {
 }
 
 const decideName = (username, URL) => {
-    if (URL.includes('instagram.com/')) {
-        return decideNameForInsta(username);
-    }
+    // if (URL.includes('instagram.com/')) {
+    //     return decideNameForInsta(username);
+    // }
 
     if (username.includes("[4spg]")) {
         username = username.replaceAll('[4spg]', '[Vxvx]');
@@ -181,22 +181,22 @@ const decideName = (username, URL) => {
     return username;
 }
 
-const decideNameForInsta = (username) => {
-    if (username.includes("[4spg]")) {
-        username = username.replaceAll('[4spg]', '[Dddd]');
-    } else if (username.includes(" | ")) {
-        username = `DD | ${username}`;
-    } else if (username.includes(" ")) {
-        username = `dd ${username.substring(username.indexOf(' ') + 1)}`;
-    } else if (username.includes("_")) {
-        username = `dd_${username}`;
-    } else if (username.includes("-")) {
-        username = `dd-${username}`;
-    } else {
-        username = `dd${username}`;
-    }
+// const decideNameForInsta = (username) => {
+//     if (username.includes("[4spg]")) {
+//         username = username.replaceAll('[4spg]', '[Dddd]');
+//     } else if (username.includes(" | ")) {
+//         username = `KK | ${username}`;
+//     } else if (username.includes(" ")) {
+//         username = `kk ${username.substring(username.indexOf(' ') + 1)}`;
+//     } else if (username.includes("_")) {
+//         username = `kk_${username}`;
+//     } else if (username.includes("-")) {
+//         username = `kk-${username}`;
+//     } else {
+//         username = `kk${username}`;
+//     }
 
-    return username;
+    // return username;
 }
 
 const createDiscordProfileFromMessage = async (message, URL) => {
