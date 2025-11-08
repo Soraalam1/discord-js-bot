@@ -197,7 +197,7 @@ const decideName = (username, URL) => {
 //     }
 
     // return username;
-}
+// }
 
 const createDiscordProfileFromMessage = async (message, URL) => {
     let guildMember;
