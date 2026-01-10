@@ -40,13 +40,13 @@ jobs:
             cd /volume2/docker/discord-bot
             
             echo "Pulling latest image..."
-            docker-compose pull
+            docker compose pull
             
             echo "Restarting container..."
-            docker-compose up -d
+            docker compose up -d
             
             echo "Checking container status..."
-            docker-compose ps
+            docker compose ps
             
             echo "Recent logs:"
-            docker-compose logs --tail=20 discord-bot
+            docker compose logs --tail=20 discord-bot
