@@ -48,5 +48,8 @@ jobs:
             echo "Checking container status..."
             docker compose ps
             
+            echo "Waiting for bot to start up..."
+            sleep 20
+            
             echo "Recent logs:"
             docker compose logs --tail=20 discord-bot
