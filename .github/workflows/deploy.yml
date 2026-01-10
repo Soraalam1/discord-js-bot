@@ -28,7 +28,7 @@ jobs:
             ghcr.io/soraalam1/discord-js-bot:latest
             ghcr.io/soraalam1/discord-js-bot:${{ github.sha }}
 
-      - name: Deploy to the NAS
+      - name: Deploy to NAS
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.NAS_HOST }}
