@@ -128,14 +128,14 @@ const scanTweetForMediaOrQuote = async (tweetID) => {
 
 
 const vxTikTok = (message) => {
-    let fixedMessage = message.cleanContent.replace("tiktok.com/", "vxtiktok.com/");
-    console.log(`tiktok link found in #${message.channel.name}, reposting with vx`);
+    let fixedMessage = message.cleanContent.replace("tiktok.com/", "tiktokez.com/");
+    console.log(`tiktok link found in #${message.channel.name}, reposting with tiktokez`);
     console.log(fixedMessage);
 
     let tiktokURL;
 
     try {
-        tiktokURL = fixedMessage.match(/(https?:\/\/(.+?\.)?vxtiktok\.com(\/[A-Za-z0-9\-\._~:\/\?#\[\]@!$&'\(\)\*\+,;\=]*)?)/)[1];
+        tiktokURL = fixedMessage.match(/(https?:\/\/(.+?\.)?tiktokez\.com(\/[A-Za-z0-9\-\._~:\/\?#\[\]@!$&'\(\)\*\+,;\=]*)?)/)[1];
         tiktokURL = removeParams(tiktokURL);
         return tiktokURL;
     } catch (error) {
