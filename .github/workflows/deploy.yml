@@ -35,7 +35,7 @@ jobs:
           username: ${{ secrets.NAS_USER }}
           key: ${{ secrets.NAS_SSH_KEY }}
           port: ${{ secrets.NAS_SSH_PORT }}
-          script: |
+          script: | 
             echo "Navigating to bot directory..."
             cd /volume2/docker/discord-bot
             
