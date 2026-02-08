@@ -160,7 +160,7 @@ const instaFix = (message) => {
 }
 
 const decideName = (username, URL) => {
-    if (URL.includes('instagram.com/')) {
+    if (URL.includes('tiktok')) {
         return decideNameForTikTok(username);
     }
 
