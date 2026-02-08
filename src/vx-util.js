@@ -160,9 +160,9 @@ const instaFix = (message) => {
 }
 
 const decideName = (username, URL) => {
-    // if (URL.includes('instagram.com/')) {
-    //     return decideNameForInsta(username);
-    // }
+    if (URL.includes('instagram.com/')) {
+        return decideNameForTikTok(username);
+    }
 
     if (username.includes("[4spg]")) {
         username = username.replaceAll('[4spg]', '[Vxvx]');
@@ -181,23 +181,23 @@ const decideName = (username, URL) => {
     return username;
 }
 
-// const decideNameForInsta = (username) => {
-//     if (username.includes("[4spg]")) {
-//         username = username.replaceAll('[4spg]', '[Dddd]');
-//     } else if (username.includes(" | ")) {
-//         username = `KK | ${username}`;
-//     } else if (username.includes(" ")) {
-//         username = `kk ${username.substring(username.indexOf(' ') + 1)}`;
-//     } else if (username.includes("_")) {
-//         username = `kk_${username}`;
-//     } else if (username.includes("-")) {
-//         username = `kk-${username}`;
-//     } else {
-//         username = `kk${username}`;
-//     }
+const decideNameForTikTok = (username) => {
+    if (username.includes("[4spg]")) {
+        username = username.replaceAll('[4spg]', '[EZ]');
+    } else if (username.includes(" | ")) {
+        username = `${username} | EZ`;
+    } else if (username.includes(" ")) {
+        username = `ez ${username.substring(username.indexOf(' ') + 1)}`;
+    } else if (username.includes("_")) {
+        username = `ez_${username}`;
+    } else if (username.includes("-")) {
+        username = `ez-${username}`;
+    } else {
+        username = `${username}ez`;
+    }
 
-    // return username;
-// }
+    return username;
+}
 
 const createDiscordProfileFromMessage = async (message, URL) => {
     let guildMember;
