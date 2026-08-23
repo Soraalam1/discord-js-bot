@@ -2,12 +2,20 @@ const axios = require('axios');
 
 const FX_TWITTER_API = "https://api.fxtwitter.com/i/status" //constant
 const TRANSLATE_TARGET_LANG = "en";
+// Hosts that already render a fixed embed. Note every one of these also contains "twitter.com/",
+// so they must be matched before the plain twitter/x branch or the rewrite would mangle them.
+const FIXED_TWITTER_HOSTS = ["vxtwitter.com/", "fxtwitter.com/", "sxtwitter.com/"];
+// facebed only serves the bare host, so m./web./www. subdomains have to be normalised away.
+const FACEBOOK_HOST = /(?:[A-Za-z0-9-]+\.)?facebook\.com\//g;
+// These two schemes carry the post id in the query string, so their params are the link itself.
+const FACEBOOK_QUERY_SCHEMES = ["permalink.php", "story.php"];
+const FACEBOOK_ID_PARAMS = ["story_fbid", "id"];
 
 const messageIdToBotMessageIdMap = new Map();
 
 const checkMessageAndVx = async (message) => {
-    if (message.content.includes("vxtwitter.com/") || message.content.includes("fxtwitter.com/") || message.content.includes("sxtwitter.com/") || message.content.includes("vxtiktok.com/")) {
-        console.log(`${message.author.username} used a fixed twitter link manually in ${message.channel.name}!`)
+    if (message.content.includes("vxtiktok.com/")) {
+        console.log(`${message.author.username} used vx on their TikTok link manually in ${message.channel.name}!`)
         return;
     }
 
@@ -16,9 +24,16 @@ const checkMessageAndVx = async (message) => {
         return;
     }
 
+    if (message.content.includes("facebed.com/")) {
+        console.log(`${message.author.username} used facebed on their Facebook link manually in ${message.channel.name}!`)
+        return;
+    }
+
     let URL;
 
-    if (message.content.includes("twitter.com/") || message.content.includes("://x.com/") || message.content.includes("://www.x.com/")) {
+    if (usesFixedTwitterHost(message.content)) {
+        URL = await retranslateFixedTwitterLink(message);
+    } else if (message.content.includes("twitter.com/") || message.content.includes("://x.com/") || message.content.includes("://www.x.com/")) {
         URL = await vxTwitter(message);
     }
 
@@ -28,6 +43,10 @@ const checkMessageAndVx = async (message) => {
 
     if (message.content.includes("instagram.com/")) {
         URL = instaFix(message);
+    }
+
+    if (message.content.includes("facebook.com/")) {
+        URL = faceBed(message);
     }
 
     if (!URL) {
@@ -76,6 +95,51 @@ const checkMessageAndVx = async (message) => {
             console.error("Error while suppressing embed:", error);
         }
     }, 6000)
+}
+
+const usesFixedTwitterHost = (content) => FIXED_TWITTER_HOSTS.some(host => content.includes(host));
+
+// The author already posted a fixed link, so the embed renders fine and there is normally nothing
+// to do. The exception is a foreign-language tweet: reposting it with the /en suffix is the only
+// way to get a readable embed, so that case is handled rather than skipped.
+const retranslateFixedTwitterLink = async (message) => {
+    let tweetURL;
+
+    try {
+        tweetURL = message.cleanContent.match(/(https?:\/\/(.+?\.)?[vfs]xtwitter\.com(\/[A-Za-z0-9\-\._~:\/\?#\[\]@!$&'\(\)\*\+,;\=]*)?)/)[1];
+    } catch (error) {
+        console.error(`Could not get fixed tweet URL using RegEx from message: ${message.cleanContent}`, error);
+        return false;
+    }
+
+    tweetURL = removeParams(tweetURL);
+
+    // They already asked for the translated embed themselves.
+    if (tweetURL.endsWith(`/${TRANSLATE_TARGET_LANG}`)) {
+        console.log(`${message.author.username} already used a translated twitter link in ${message.channel.name}!`);
+        return false;
+    }
+
+    const tweetIDMatch = tweetURL.match(/(?<=\/status\/)\d+/);
+
+    if (!tweetIDMatch) {
+        return false;
+    }
+
+    const {lang} = await inspectTweet(tweetIDMatch[0]);
+
+    if (!lang || lang === TRANSLATE_TARGET_LANG) {
+        console.log(`${message.author.username} used a fixed twitter link manually in ${message.channel.name}!`)
+        return false;
+    }
+
+    // Normalise whichever fixed host they used to fxtwitter, then request the translated embed.
+    const translatedURL = withTranslationSuffix(tweetURL.replace(/[vfs]xtwitter\.com/, "fxtwitter.com"));
+
+    console.log(`fixed twitter link in "${lang}" found in #${message.channel.name}, reposting translated`);
+    console.log(translatedURL);
+
+    return translatedURL;
 }
 
 const removeParams = (message) => {
@@ -188,9 +252,45 @@ const instaFix = (message) => {
     }
 }
 
+// permalink.php and story.php keep the post id in story_fbid, so only the surrounding tracking
+// params get dropped rather than the whole query string.
+const removeExtraFacebookParams = (facebookURL) => {
+    const [base, query] = facebookURL.split("?");
+
+    if (!query) {
+        return facebookURL;
+    }
+
+    const kept = query.split("&").filter(pair => FACEBOOK_ID_PARAMS.includes(pair.split("=")[0]));
+
+    return kept.length ? `${base}?${kept.join("&")}` : base;
+}
+
+const faceBed = (message) => {
+    let fixedMessage = message.cleanContent.replace(FACEBOOK_HOST, "facebed.com/");
+    console.log(`Facebook link found in #${message.channel.name}, reposting with facebed`);
+    console.log(fixedMessage);
+
+    let facebookURL;
+
+    try {
+        facebookURL = fixedMessage.match(/(https?:\/\/(.+?\.)?facebed\.com(\/[A-Za-z0-9\-\._~:\/\?#\[\]@!$&'\(\)\*\+,;\=]*)?)/)[1];
+
+        return FACEBOOK_QUERY_SCHEMES.some(scheme => facebookURL.includes(scheme))
+            ? removeExtraFacebookParams(facebookURL)
+            : removeParams(facebookURL);
+    } catch (error) {
+        console.error(`Could not get Facebook URL using RegEx from message: ${fixedMessage}`, error);
+    }
+}
+
 const decideName = (username, URL) => {
     if (URL.includes('tiktok')) {
         return decideNameForTikTok(username);
+    }
+
+    if (URL.includes('facebed')) {
+        return decideNameForFacebook(username);
     }
 
     if (username.includes("[4spg]")) {
@@ -223,6 +323,24 @@ const decideNameForTikTok = (username) => {
         username = `ez-${username}`;
     } else {
         username = `${username}ez`;
+    }
+
+    return username;
+}
+
+const decideNameForFacebook = (username) => {
+    if (username.includes("[4spg]")) {
+        username = username.replaceAll('[4spg]', '[BED]');
+    } else if (username.includes(" | ")) {
+        username = `${username} | BED`;
+    } else if (username.includes(" ")) {
+        username = `bed ${username.substring(username.indexOf(' ') + 1)}`;
+    } else if (username.includes("_")) {
+        username = `bed_${username}`;
+    } else if (username.includes("-")) {
+        username = `bed-${username}`;
+    } else {
+        username = `${username}bed`;
     }
 
     return username;
