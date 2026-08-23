@@ -1,12 +1,13 @@
 const axios = require('axios');
 
-const VX_TWITTER_API = "https://api.vxtwitter.com/Twitter/status" //constant
+const FX_TWITTER_API = "https://api.fxtwitter.com/i/status" //constant
+const TRANSLATE_TARGET_LANG = "en";
 
 const messageIdToBotMessageIdMap = new Map();
 
 const checkMessageAndVx = async (message) => {
     if (message.content.includes("vxtwitter.com/") || message.content.includes("fxtwitter.com/") || message.content.includes("sxtwitter.com/") || message.content.includes("vxtiktok.com/")) {
-        console.log(`${message.author.username} used vx on their link manually in ${message.channel.name}!`)
+        console.log(`${message.author.username} used a fixed twitter link manually in ${message.channel.name}!`)
         return;
     }
 
@@ -88,11 +89,11 @@ const removeParams = (message) => {
 const vxTwitter = async (message) => {
     let tweetURL;
 
-    let fixedMessage = message.cleanContent.replace("twitter.com/", "vxtwitter.com/");
-    fixedMessage = fixedMessage.replace("x.com/", "vxtwitter.com/");
+    let fixedMessage = message.cleanContent.replace("twitter.com/", "fxtwitter.com/");
+    fixedMessage = fixedMessage.replace("x.com/", "fxtwitter.com/");
 
     try {
-        tweetURL = fixedMessage.match(/(https?:\/\/(.+?\.)?vxtwitter\.com(\/[A-Za-z0-9\-\._~:\/\?#\[\]@!$&'\(\)\*\+,;\=]*)?)/)[1];
+        tweetURL = fixedMessage.match(/(https?:\/\/(.+?\.)?fxtwitter\.com(\/[A-Za-z0-9\-\._~:\/\?#\[\]@!$&'\(\)\*\+,;\=]*)?)/)[1];
     } catch (error) {
         console.error(`Could not get tweet URL using RegEx from message: ${fixedMessage}`, error);
         return;
@@ -103,27 +104,55 @@ const vxTwitter = async (message) => {
 
     const tweetID = tweetURL.match(/(?<=\/status\/)\d+/)[0];
 
-    let mediaWasFound = await scanTweetForMediaOrQuote(tweetID);
+    const {hasMediaOrQuote, lang} = await inspectTweet(tweetID);
+    const needsTranslation = !!lang && lang !== TRANSLATE_TARGET_LANG;
 
-    if (mediaWasFound) {
-        console.log(`twitter link with media found in #${message.channel.name}, reposting with vx`);
-        console.log(tweetURL);
-        return tweetURL;
+    // Media and quotes are reposted because Discord renders them poorly; foreign-language tweets
+    // are reposted for the translated embed, whether or not they carry media.
+    if (!hasMediaOrQuote && !needsTranslation) {
+        return false;
     }
 
-    return false;
+    if (needsTranslation) {
+        // FxTwitter renders a translated embed when the URL ends in a language code.
+        tweetURL = withTranslationSuffix(tweetURL);
+    }
+
+    const reason = hasMediaOrQuote
+        ? (needsTranslation ? `media and "${lang}" text` : "media")
+        : `"${lang}" text`;
+
+    console.log(`twitter link with ${reason} found in #${message.channel.name}, reposting with fx`);
+    console.log(tweetURL);
+
+    return tweetURL;
 }
 
-const scanTweetForMediaOrQuote = async (tweetID) => {
+// Appending blindly would corrupt links carrying extra path segments (".../status/123/photo/1"),
+// so the suffix is applied to the "/status/<id>" portion only.
+const withTranslationSuffix = (tweetURL) => {
+    const statusMatch = tweetURL.match(/^(.*\/status\/\d+)/);
+
+    return statusMatch ? `${statusMatch[1]}/${TRANSLATE_TARGET_LANG}` : tweetURL;
+}
+
+// One request answers both questions: whether the tweet is worth reposting, and what language it
+// is in. Returning them together keeps this to a single API call per link.
+const inspectTweet = async (tweetID) => {
     let targetTweet;
 
     try {
-        targetTweet = await axios.get(`${VX_TWITTER_API}/${tweetID}`);
+        targetTweet = await axios.get(`${FX_TWITTER_API}/${tweetID}`);
     } catch (error) {
-        console.log('Could not get tweet information from VX Twitter API: \n', error);
+        console.log('Could not get tweet information from FX Twitter API: \n', error);
     }
 
-    return targetTweet?.data?.hasMedia || !!targetTweet?.data?.qrt;
+    const tweet = targetTweet?.data?.tweet;
+
+    return {
+        hasMediaOrQuote: !!tweet?.media?.all?.length || !!tweet?.quote,
+        lang: tweet?.lang ?? null
+    };
 }
 
 
@@ -165,17 +194,17 @@ const decideName = (username, URL) => {
     }
 
     if (username.includes("[4spg]")) {
-        username = username.replaceAll('[4spg]', '[Vxvx]');
+        username = username.replaceAll('[4spg]', '[Fxfx]');
     } else if (username.includes(" | ")) {
-        username = `VX | ${username}`;
+        username = `FX | ${username}`;
     } else if (username.includes(" ")) {
-        username = `vx ${username.substring(username.indexOf(' ') + 1)}`
+        username = `fx ${username.substring(username.indexOf(' ') + 1)}`
     } else if (username.includes("_")) {
-        username = `vx_${username}`;
+        username = `fx_${username}`;
     } else if (username.includes("-")) {
-        username = `vx-${username}`;
+        username = `fx-${username}`;
     } else {
-        username = `vx${username}`;
+        username = `fx${username}`;
     }
 
     return username;
