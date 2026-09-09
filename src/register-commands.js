@@ -59,7 +59,7 @@ const ASSIGNABLE_ROLES = [
         value: null
     },
     {
-        name: 'KH4 Spoilers',
+        name: 'Book of Prophecies',
         value: null
     }
 ]
