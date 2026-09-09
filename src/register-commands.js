@@ -57,6 +57,10 @@ const ASSIGNABLE_ROLES = [
     {
         name: 'PokeDrops',
         value: null
+    },
+    {
+        name: 'KH4 Spoilers',
+        value: null
     }
 ]
 
