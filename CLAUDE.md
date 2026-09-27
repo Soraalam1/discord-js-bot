@@ -19,6 +19,8 @@ Verifying a change usually means running the bot against the real Discord guild 
 
 `.env` (gitignored) supplies: `DISCORD_BOT_TOKEN`, `DISCORD_CLIENT_ID`, `DISCORD_GUILD_ID`, plus `TWITTER_TARGET_USERNAME` and `DISCORD_TWEET_CHANNEL_ID` (leftovers from unfinished Twitter-monitor work).
 
+Stream alerts ([src/stream-monitor.js](src/stream-monitor.js)) need `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET`, `TWITCH_USERNAME` and `DISCORD_STREAM_ALERT_CHANNEL_ID`, and stay disabled without them. `YOUTUBE_CHANNEL_ID` (`UC…`) is optional and turns on the YouTube simulcast link. No YouTube API key is needed. Tunables: `TWITCH_POLL_INTERVAL_MS` (default 60000) and `YOUTUBE_MATCH_WINDOW_MIN` (default 60).
+
 ### Deployment
 
 Push to `master` triggers [.github/workflows/deploy.yml](.github/workflows/deploy.yml): build → push to `ghcr.io/soraalam1/discord-js-bot` → SSH to the NAS at `/volume2/docker/discord-bot` → `docker compose pull && up -d`. The `docker-compose.yml` lives on the NAS, not in this repo. The image builds with `npm ci --only=production`, so a new dependency must be committed to **both** `package.json` and `package-lock.json` or the container will crash on startup even though it works locally.
@@ -54,6 +56,13 @@ State is in-memory only — a restart drops the delete-tracking map.
 ### Image generation ([src/image-processor.js](src/image-processor.js))
 
 `@napi-rs/canvas` composites the Pokémon sprite over `./img/pokemontemplate2.png` — a **relative** path, so the bot must be started with the repo root as cwd (the Dockerfile's `WORKDIR /app` satisfies this). "Who's that Pokémon?" silhouettes work by zeroing RGB while preserving the alpha channel.
+
+### Stream alerts ([src/stream-monitor.js](src/stream-monitor.js))
+
+Started from `ready` after `registerCommands`, because it reads the `Stream Alerts` role ID from `MENTIONABLE_ROLES`. It polls Twitch Helix `/streams` with an app (client-credentials) token. A new stream ID produces a role ping plus an embed (title, game, box art as the main image, and Twitch/YouTube link buttons).
+
+- **YouTube match (keyless):** new Google Cloud projects get 0 Data API quota until they pass an audit, so the bot reads public pages instead. The channel's `/live` page is canonicalised to the current or scheduled stream's watch URL. That watch page's `liveBroadcastDetails` JSON gives `isLiveNow` and `startTimestamp`. The newest 3 RSS entries are checked the same way as a fallback. A `live`/`upcoming` video must start within the match window of Twitch's `started_at`. If nothing matches at post time, the bot retries every 60s for 10 minutes and edits the link in. This is scraping, so a YouTube page change can silently break the match; the Twitch alert still posts.
+- **No double pings:** on the first poll after startup it adopts its own recent alert by matching the embed timestamp to `started_at`. If it finds none, it skips streams older than 10 minutes. A new stream ID within 10 minutes of going offline counts as a reconnect and edits the existing alert.
 
 ## Known loose ends
 

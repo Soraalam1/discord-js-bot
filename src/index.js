@@ -6,6 +6,7 @@ const {handleGameStart, handleAnswerAttempt} = require("./typing-games");
 const {handleUserRoleRequest} = require("./role-assignment");
 const {registerCommands} = require('./register-commands');
 const {startTweetMonitor} = require('./twitter-monitor');
+const {startStreamMonitor} = require('./stream-monitor');
 
 
 const client = new DiscordClient({
@@ -24,6 +25,7 @@ client.login(process.env.DISCORD_BOT_TOKEN).catch(error => console.log(error));
 client.on("ready", async (client) => {
     await registerCommands(client);
     await startTweetMonitor(client);
+    await startStreamMonitor(client);
     console.log(`${client.user.username} is ready!`);
 });
 
