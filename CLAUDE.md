@@ -33,7 +33,7 @@ Single-process discord.js v14 bot. [src/index.js](src/index.js) is the only entr
 
 ### Slash command registration
 
-[src/register-commands.js](src/register-commands.js) registers on the `ready` event as **guild** commands scoped to `DISCORD_GUILD_ID` (instant propagation, no global cache delay). It also does double duty as role-ID resolution: `updateRoleValues` walks the live guild role cache at startup and fills in `ASSIGNABLE_ROLES[].value` (used as slash-command choice values) and the exported mutable `MENTIONABLE_ROLES` map (name → role ID, consumed by `typing-games.js` for `<@&id>` pings). Role names in those two arrays must match Discord role names **exactly**, or values stay `null` and mentions render broken.
+[src/register-commands.js](src/register-commands.js) registers on the `clientReady` event as **guild** commands scoped to `DISCORD_GUILD_ID` (instant propagation, no global cache delay). It also does double duty as role-ID resolution: `updateRoleValues` walks the live guild role cache at startup and fills in `ASSIGNABLE_ROLES[].value` (used as slash-command choice values) and the exported mutable `MENTIONABLE_ROLES` map (name → role ID, consumed by `typing-games.js` for `<@&id>` pings). Role names in those two arrays must match Discord role names **exactly**, or values stay `null` and mentions render broken.
 
 ### Games ([src/typing-games.js](src/typing-games.js))
 
@@ -59,7 +59,7 @@ State is in-memory only — a restart drops the delete-tracking map.
 
 ### Stream alerts ([src/stream-monitor.js](src/stream-monitor.js))
 
-Started from `ready` after `registerCommands`, because it reads the `Stream Alerts` role ID from `MENTIONABLE_ROLES`. It polls Twitch Helix `/streams` with an app (client-credentials) token. A new stream ID produces a role ping plus an embed (title, game, box art as the main image, and Twitch/YouTube link buttons).
+Started from `clientReady` after `registerCommands`, because it reads the `Stream Alerts` role ID from `MENTIONABLE_ROLES`. It polls Twitch Helix `/streams` with an app (client-credentials) token. A new stream ID produces a role ping plus an embed (title, game, box art as the main image, and Twitch/YouTube link buttons).
 
 - **YouTube match (keyless):** new Google Cloud projects get 0 Data API quota until they pass an audit, so the bot reads public pages instead. The channel's `/live` page is canonicalised to the current or scheduled stream's watch URL. That watch page's `liveBroadcastDetails` JSON gives `isLiveNow` and `startTimestamp`. The newest 3 RSS entries are checked the same way as a fallback. A `live`/`upcoming` video must start within the match window of Twitch's `started_at`. If nothing matches at post time, the bot retries every 60s for 10 minutes and edits the link in. This is scraping, so a YouTube page change can silently break the match; the Twitch alert still posts.
 - **No double pings:** on the first poll after startup it adopts its own recent alert by matching the embed timestamp to `started_at`. If it finds none, it skips streams older than 10 minutes. A new stream ID within 10 minutes of going offline counts as a reconnect and edits the existing alert.

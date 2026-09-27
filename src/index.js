@@ -22,7 +22,7 @@ const client = new DiscordClient({
 
 client.login(process.env.DISCORD_BOT_TOKEN).catch(error => console.log(error));
 
-client.on("ready", async (client) => {
+client.on("clientReady", async (client) => {
     await registerCommands(client);
     await startTweetMonitor(client);
     await startStreamMonitor(client);
