@@ -2,9 +2,15 @@ const axios = require('axios');
 
 const FX_TWITTER_API = "https://api.fxtwitter.com/i/status" //constant
 const TRANSLATE_TARGET_LANG = "en";
-// Hosts that already render a fixed embed. Note every one of these also contains "twitter.com/",
-// so they must be matched before the plain twitter/x branch or the rewrite would mangle them.
-const FIXED_TWITTER_HOSTS = ["vxtwitter.com/", "fxtwitter.com/", "sxtwitter.com/"];
+// Hosts that already render a fixed embed. The *twitter ones also contain "twitter.com/", so they
+// must be matched before the plain twitter/x branch or the rewrite would mangle them.
+const FIXED_TWITTER_HOSTS = ["vxtwitter.com/", "fxtwitter.com/", "sxtwitter.com/", "fixupx.com/", "fixvx.com/"];
+const FIXED_TWITTER_HOST_PATTERN = FIXED_TWITTER_HOSTS.map(host => host.slice(0, -1).replace(".", "\\.")).join("|");
+const FIXED_TWITTER_URL = new RegExp(`(https?:\\/\\/(.+?\\.)?(?:${FIXED_TWITTER_HOST_PATTERN})(\\/[A-Za-z0-9\\-\\._~:\\/\\?#\\[\\]@!$&'\\(\\)\\*\\+,;\\=]*)?)`);
+const FIXED_TWITTER_HOST = new RegExp(FIXED_TWITTER_HOST_PATTERN);
+// Twitter tags tweets with no translatable text using these pseudo-languages: zxx (media/links
+// only), und (undetermined) and q* (emoji-only, hashtags-only, cashtags, mentions).
+const UNTRANSLATABLE_LANG = /^(zxx|und|q[a-z]{2})$/;
 // facebed only serves the bare host, so m./web./www. subdomains have to be normalised away.
 const FACEBOOK_HOST = /(?:[A-Za-z0-9-]+\.)?facebook\.com\//g;
 // These two schemes carry the post id in the query string, so their params are the link itself.
@@ -106,7 +112,7 @@ const retranslateFixedTwitterLink = async (message) => {
     let tweetURL;
 
     try {
-        tweetURL = message.cleanContent.match(/(https?:\/\/(.+?\.)?[vfs]xtwitter\.com(\/[A-Za-z0-9\-\._~:\/\?#\[\]@!$&'\(\)\*\+,;\=]*)?)/)[1];
+        tweetURL = message.cleanContent.match(FIXED_TWITTER_URL)[1];
     } catch (error) {
         console.error(`Could not get fixed tweet URL using RegEx from message: ${message.cleanContent}`, error);
         return false;
@@ -128,13 +134,13 @@ const retranslateFixedTwitterLink = async (message) => {
 
     const {lang} = await inspectTweet(tweetIDMatch[0]);
 
-    if (!lang || lang === TRANSLATE_TARGET_LANG) {
+    if (!needsTranslation(lang)) {
         console.log(`${message.author.username} used a fixed twitter link manually in ${message.channel.name}!`)
         return false;
     }
 
     // Normalise whichever fixed host they used to fxtwitter, then request the translated embed.
-    const translatedURL = withTranslationSuffix(tweetURL.replace(/[vfs]xtwitter\.com/, "fxtwitter.com"));
+    const translatedURL = withTranslationSuffix(tweetURL.replace(FIXED_TWITTER_HOST, "fxtwitter.com"));
 
     console.log(`fixed twitter link in "${lang}" found in #${message.channel.name}, reposting translated`);
     console.log(translatedURL);
@@ -169,21 +175,21 @@ const vxTwitter = async (message) => {
     const tweetID = tweetURL.match(/(?<=\/status\/)\d+/)[0];
 
     const {hasMediaOrQuote, lang} = await inspectTweet(tweetID);
-    const needsTranslation = !!lang && lang !== TRANSLATE_TARGET_LANG;
+    const translate = needsTranslation(lang);
 
     // Media and quotes are reposted because Discord renders them poorly; foreign-language tweets
     // are reposted for the translated embed, whether or not they carry media.
-    if (!hasMediaOrQuote && !needsTranslation) {
+    if (!hasMediaOrQuote && !translate) {
         return false;
     }
 
-    if (needsTranslation) {
+    if (translate) {
         // FxTwitter renders a translated embed when the URL ends in a language code.
         tweetURL = withTranslationSuffix(tweetURL);
     }
 
     const reason = hasMediaOrQuote
-        ? (needsTranslation ? `media and "${lang}" text` : "media")
+        ? (translate ? `media and "${lang}" text` : "media")
         : `"${lang}" text`;
 
     console.log(`twitter link with ${reason} found in #${message.channel.name}, reposting with fx`);
@@ -191,6 +197,8 @@ const vxTwitter = async (message) => {
 
     return tweetURL;
 }
+
+const needsTranslation = (lang) => !!lang && lang !== TRANSLATE_TARGET_LANG && !UNTRANSLATABLE_LANG.test(lang);
 
 // Appending blindly would corrupt links carrying extra path segments (".../status/123/photo/1"),
 // so the suffix is applied to the "/status/<id>" portion only.
