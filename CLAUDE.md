@@ -73,7 +73,7 @@ Keeps `Active Supporter - …` color roles in sync with the integration-managed 
 - `reconcileMember` is idempotent and serialized through one promise queue. It runs on `guildMemberUpdate`, at startup and in an hourly full sweep. A member who has a color role but no saved preference gets that role adopted as their preference.
 - `members.edit` returns a patched clone without updating the cache, so `reconcileMember` writes the clone back into the cache. Otherwise `deleteIfUnused` would still count the old holder.
 - Blue lock: colors within CIEDE2000 ΔE `BLUE_LOCK_DELTA_E` (default 9) of `#3498db` are refused for everyone except the guild owner, and are not applied if already stored.
-- Commands: `/mycolor` (self-service) and `/supportercolor` (Manage Roles). Preset choices are filled in from the guild's roles at registration, so a new preset role needs a restart to appear.
+- Commands: `/mycolor` (self-service) and `/supportercolor` (Manage Roles). Replies are an embed in the chosen color with a swatch from `createColorSwatch` in `image-processor.js`. `/mycolor` replies are public; `/supportercolor` replies are ephemeral. Preset choices are filled in from the guild's roles at registration, so a new preset role needs a restart to appear.
 
 ## Known loose ends
 

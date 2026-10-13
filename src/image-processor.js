@@ -43,4 +43,29 @@ const createSilhouetteFromImage = async (image) => {
     return await canvas.encode('png');
 }
 
-module.exports = {createPokemonImage}
+// Discord's message backgrounds in dark and light mode, so the swatch previews the name color on both.
+const DISCORD_DARK_BACKGROUND = '#313338';
+const DISCORD_LIGHT_BACKGROUND = '#ffffff';
+
+// No text is drawn: the Alpine image ships without fonts.
+const createColorSwatch = async (color) => {
+    const canvas = Canvas.createCanvas(192, 96);
+    const context = canvas.getContext('2d');
+    const half = canvas.width / 2;
+
+    context.fillStyle = DISCORD_DARK_BACKGROUND;
+    context.fillRect(0, 0, half, canvas.height);
+    context.fillStyle = DISCORD_LIGHT_BACKGROUND;
+    context.fillRect(half, 0, half, canvas.height);
+
+    context.fillStyle = color;
+    [half / 2, half + half / 2].forEach(centerX => {
+        context.beginPath();
+        context.arc(centerX, canvas.height / 2, 30, 0, Math.PI * 2);
+        context.fill();
+    });
+
+    return await canvas.encode('png');
+}
+
+module.exports = {createPokemonImage, createColorSwatch}

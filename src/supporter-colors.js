@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
-const {ApplicationCommandOptionType, MessageFlags, PermissionFlagsBits} = require("discord.js");
+const {ApplicationCommandOptionType, AttachmentBuilder, EmbedBuilder, MessageFlags, PermissionFlagsBits} = require("discord.js");
+const {createColorSwatch} = require("./image-processor");
 
 const STORE_PATH = path.resolve(__dirname, "..", "data", "supporter-colors.json");
 const COLOR_ROLE_PREFIX = "Active Supporter - ";
@@ -193,7 +194,7 @@ const getSelectablePresets = guild => {
 
 // Returns a reason string when the color must not be applied, otherwise null.
 const checkColor = (guild, userId, color) =>
-    !isBlueExempt(guild, userId) && isTooCloseToBlue(color) ? `${color} is too close to the reserved blue` : null;
+    !isBlueExempt(guild, userId) && isTooCloseToBlue(color) ? "This shade of blue is not allowed." : null;
 
 const ensureRole = async (guild, color) => {
     const existing = findRoleForColor(guild, color);
@@ -267,15 +268,16 @@ const adoptExistingColor = (member) => {
     return preferences.get(member.id);
 };
 
-const reconcileMember = async (member) => {
+// `adopt` is off right after a clear, which would otherwise re-import the role being removed.
+const reconcileMember = async (member, {adopt = true} = {}) => {
     const guild = member.guild;
-    const pref = preferences.get(member.id) ?? adoptExistingColor(member);
+    const pref = preferences.get(member.id) ?? (adopt ? adoptExistingColor(member) : null);
 
     let desiredRole = null;
     if (pref && isSupporter(member)) {
         const problem = checkColor(guild, member.id, pref.color);
         if (problem) {
-            console.log(`Supporter colors: not applying color for ${member.user.tag}: ${problem}`);
+            console.log(`Supporter colors: not applying ${pref.color} for ${member.user.tag}: too close to the reserved blue`);
         } else {
             desiredRole = await ensureRole(guild, pref.color);
         }
@@ -422,9 +424,34 @@ const buildSupporterColorCommands = (guild) => {
     ];
 };
 
-const describeColor = (guild, color) => {
+// An embed in the chosen color with a swatch showing it on Discord's dark and light backgrounds.
+const buildColorCard = async ({guild, user, member, color, title}) => {
     const preset = findPresetRole(guild, color);
-    return preset ? `${presetNameOf(preset)} (${color})` : color;
+    const problem = checkColor(guild, user.id, color);
+    let status;
+    if (problem) {
+        status = `Not applied. ${problem}`;
+    } else if (member && isSupporter(member)) {
+        status = "Active";
+    } else {
+        status = "Saved, applies while supporting";
+    }
+
+    const embed = new EmbedBuilder()
+        .setTitle(title)
+        .setColor(color)
+        .addFields(
+            {name: "Color", value: preset ? `${presetNameOf(preset)} \`${color}\`` : `\`${color}\``, inline: true},
+            {name: "Status", value: status, inline: true},
+        );
+    const files = [];
+    try {
+        files.push(new AttachmentBuilder(await createColorSwatch(color), {name: "color.png"}));
+        embed.setThumbnail("attachment://color.png");
+    } catch (error) {
+        console.log(`Supporter colors: could not draw swatch: ${error}`);
+    }
+    return {embeds: [embed], files};
 };
 
 const handleSupporterColorCommand = async (interaction) => {
@@ -438,16 +465,18 @@ const handleSupporterColorCommand = async (interaction) => {
     }
 
     try {
+        const isAdmin = commandName === "supportercolor";
+        const subcommand = interaction.options.getSubcommand();
+        // Members' own color commands are public for the flair. Admin commands stay private.
         // Creating and positioning a role can take longer than the 3s Discord allows for a reply.
-        await interaction.deferReply({flags: MessageFlags.Ephemeral});
+        await interaction.deferReply(isAdmin ? {flags: MessageFlags.Ephemeral} : {});
 
         const guild = interaction.guild;
-        const isAdmin = commandName === "supportercolor";
         const user = isAdmin ? interaction.options.getUser("user") : interaction.user;
         // The target may have left the server; their preference can still be stored.
         const member = isAdmin ? interaction.options.getMember("user") : interaction.member;
         const who = isAdmin ? `${user}'s` : "Your";
-        const subcommand = interaction.options.getSubcommand();
+        const displayName = member?.displayName ?? user.globalName ?? user.username;
         const reply = content => interaction.editReply({content, allowedMentions: {parse: []}});
 
         if (subcommand === "view") {
@@ -456,15 +485,15 @@ const handleSupporterColorCommand = async (interaction) => {
                 await reply(`${who} color isn't set.`);
                 return;
             }
-            const status = member && isSupporter(member) ? "active" : "saved but not active (not currently supporting)";
-            await reply(`${who} color is ${describeColor(guild, pref.color)}, ${status}.`);
+            const card = await buildColorCard({guild, user, member, color: pref.color, title: `${displayName}'s name color`});
+            await interaction.editReply({...card, allowedMentions: {parse: []}});
             return;
         }
 
         if (subcommand === "clear") {
             const existed = clearPreference(user.id);
             if (member) {
-                await enqueue(() => reconcileMember(member));
+                await enqueue(() => reconcileMember(member, {adopt: false}));
             }
             await reply(existed ? `${who} color has been cleared.` : `${who} color wasn't set.`);
             return;
@@ -492,7 +521,7 @@ const handleSupporterColorCommand = async (interaction) => {
 
         const problem = checkColor(guild, user.id, color);
         if (problem) {
-            await reply(`Sorry, ${problem}. Please pick a different color.`);
+            await reply(problem);
             return;
         }
 
@@ -501,13 +530,9 @@ const handleSupporterColorCommand = async (interaction) => {
             await enqueue(() => reconcileMember(member));
         }
 
-        let status;
-        if (member && isSupporter(member)) {
-            status = "It's been applied.";
-        } else {
-            status = `It'll apply while ${isAdmin ? "they're" : "you're"} supporting.`;
-        }
-        await reply(`${who} color is now ${describeColor(guild, color)}. ${status}`);
+        const title = isAdmin ? `Name color saved for ${displayName}` : `${displayName}'s new name color`;
+        const card = await buildColorCard({guild, user, member, color, title});
+        await interaction.editReply({...card, allowedMentions: {parse: []}});
     } catch (error) {
         console.log(`Supporter colors: command failed: ${error}`);
         const content = "Something went wrong updating the color.";
