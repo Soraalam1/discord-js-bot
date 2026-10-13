@@ -64,7 +64,17 @@ Started from `clientReady` after `registerCommands`, because it reads the `Strea
 - **YouTube match (keyless):** new Google Cloud projects get 0 Data API quota until they pass an audit, so the bot reads public pages instead. The channel's `/live` page is canonicalised to the current or scheduled stream's watch URL. That watch page's `liveBroadcastDetails` JSON gives `isLiveNow` and `startTimestamp`. The newest 3 RSS entries are checked the same way as a fallback. A `live`/`upcoming` video must start within the match window of Twitch's `started_at`. If nothing matches at post time, the bot retries every 60s for 10 minutes and edits the link in. This is scraping, so a YouTube page change can silently break the match; the Twitch alert still posts.
 - **No double pings:** on the first poll after startup it adopts its own recent alert by matching the embed timestamp to `started_at`. If it finds none, it skips streams older than 10 minutes. A new stream ID within 10 minutes of going offline counts as a reconnect and edits the existing alert.
 
+### Supporter colors ([src/supporter-colors.js](src/supporter-colors.js))
+
+Keeps `Active Supporter - …` color roles in sync with the integration-managed `Twitch Subscriber` / `Discord Supporter` / `YouTube Member` roles (override the names with a comma-separated `SUPPORTER_ROLE_NAMES` for testing). Preferences live in `data/supporter-colors.json`. That is the bot's only persistent state, so the NAS compose file must mount a volume at `/app/data`. If the file is unreadable, the feature disables itself instead of overwriting it.
+
+- A preference is just a hex color, and the bot reuses whichever color role already has that color. Permanent roles win over custom ones, so typing a preset's hex never creates a duplicate.
+- A role whose name contains `#` is a custom color. The bot creates it on demand next to the other color roles and deletes it once nobody holds it. Any other `Active Supporter - <Name>` role is permanent and is never created or deleted. Only the permanent roles whose color is one of the 20 swatches in Discord's picker (`DISCORD_PRESET_COLORS`) are offered by `/mycolor preset`.
+- `reconcileMember` is idempotent and serialized through one promise queue. It runs on `guildMemberUpdate`, at startup and in an hourly full sweep. A member who has a color role but no saved preference gets that role adopted as their preference.
+- `members.edit` returns a patched clone without updating the cache, so `reconcileMember` writes the clone back into the cache. Otherwise `deleteIfUnused` would still count the old holder.
+- Blue lock: colors within CIEDE2000 ΔE `BLUE_LOCK_DELTA_E` (default 9) of `#3498db` are refused for everyone except the guild owner, and are not applied if already stored.
+- Commands: `/mycolor` (self-service) and `/supportercolor` (Manage Roles). Preset choices are filled in from the guild's roles at registration, so a new preset role needs a restart to appear.
+
 ## Known loose ends
 
 - [src/twitter.js](src/twitter.js) exports a configured `@the-convocation/twitter-scraper` instance (routed through a corsproxy.io transform) but **nothing imports it**, and the package is present in `node_modules` yet missing from `package.json`. Wiring it into `index.js` without first adding the dependency will build fine locally and crash in Docker.
-- `data/` exists but is empty and unused; there is no persistence layer anywhere in the bot.

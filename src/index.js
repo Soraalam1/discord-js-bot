@@ -7,6 +7,7 @@ const {handleUserRoleRequest} = require("./role-assignment");
 const {registerCommands} = require('./register-commands');
 const {startTweetMonitor} = require('./twitter-monitor');
 const {startStreamMonitor} = require('./stream-monitor');
+const {startSupporterColors, handleMemberUpdate, handleMemberRemove, handleSupporterColorCommand} = require('./supporter-colors');
 
 
 const client = new DiscordClient({
@@ -26,6 +27,7 @@ client.on("clientReady", async (client) => {
     await registerCommands(client);
     await startTweetMonitor(client);
     await startStreamMonitor(client);
+    await startSupporterColors(client);
     console.log(`${client.user.username} is ready!`);
 });
 
@@ -34,6 +36,7 @@ client.on('interactionCreate', async (interaction) => {
     handleGameStart(interaction);
     handleUserRoleRequest(interaction);
     handleReminder(interaction);
+    handleSupporterColorCommand(interaction);
 });
 
 client.on("messageCreate", async (message) => {
@@ -49,3 +52,11 @@ client.on("messageCreate", async (message) => {
 client.on("messageDelete", async (message) => {
     await deleteVxLink(message);
 })
+
+client.on("guildMemberUpdate", (oldMember, newMember) => {
+    handleMemberUpdate(oldMember, newMember);
+});
+
+client.on("guildMemberRemove", (member) => {
+    handleMemberRemove(member);
+});

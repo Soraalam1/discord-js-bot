@@ -1,5 +1,6 @@
 require('dotenv').config();
 const {REST, Routes, ApplicationCommandOptionType} = require('discord.js');
+const {buildSupporterColorCommands} = require('./supporter-colors');
 
 const ASSIGNABLE_ROLES = [
     {
@@ -214,10 +215,11 @@ const rest = new REST({version: '10'}).setToken(process.env.DISCORD_BOT_TOKEN);
 const registerCommands = async (client) => {
     try {
         console.log('Registering slash commands...');
-        updateRoleValues(client.guilds.cache.get(process.env.DISCORD_GUILD_ID).roles.cache);
+        const guild = client.guilds.cache.get(process.env.DISCORD_GUILD_ID);
+        updateRoleValues(guild.roles.cache);
         await rest.put(
             Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID, process.env.DISCORD_GUILD_ID),
-            {body: commands}
+            {body: [...commands, ...buildSupporterColorCommands(guild)]}
         )
         console.log('Slash commands were registered successfully!');
     } catch (error) {
