@@ -174,12 +174,12 @@ const vxTwitter = async (message) => {
 
     const tweetID = tweetURL.match(/(?<=\/status\/)\d+/)[0];
 
-    const {hasMediaOrQuote, lang} = await inspectTweet(tweetID);
+    const {hasMediaOrQuote, isReply, lang} = await inspectTweet(tweetID);
     const translate = needsTranslation(lang);
 
-    // Media and quotes are reposted because Discord renders them poorly; foreign-language tweets
-    // are reposted for the translated embed, whether or not they carry media.
-    if (!hasMediaOrQuote && !translate) {
+    // Media, quotes and replies are reposted because Discord renders them poorly; foreign-language
+    // tweets are reposted for the translated embed, whether or not they carry media.
+    if (!hasMediaOrQuote && !isReply && !translate) {
         return false;
     }
 
@@ -188,9 +188,11 @@ const vxTwitter = async (message) => {
         tweetURL = withTranslationSuffix(tweetURL);
     }
 
-    const reason = hasMediaOrQuote
-        ? (translate ? `media and "${lang}" text` : "media")
-        : `"${lang}" text`;
+    const reason = [
+        hasMediaOrQuote && "media",
+        isReply && "reply",
+        translate && `"${lang}" text`
+    ].filter(Boolean).join(" and ");
 
     console.log(`twitter link with ${reason} found in #${message.channel.name}, reposting with fx`);
     console.log(tweetURL);
@@ -223,6 +225,7 @@ const inspectTweet = async (tweetID) => {
 
     return {
         hasMediaOrQuote: !!tweet?.media?.all?.length || !!tweet?.quote,
+        isReply: !!tweet?.replying_to_status,
         lang: tweet?.lang ?? null
     };
 }
